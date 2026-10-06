@@ -1,0 +1,24 @@
+.bouton-theme {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  background: var(--surface);
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.bouton-theme:hover {
+  border-color: var(--line-strong);
+  background: var(--cream);
+  color: var(--accent-text);
+}
+
+.bouton-theme:focus-visible {
+  outline: 3px solid var(--mnp-yellow);
+  outline-offset: 2px;
+}

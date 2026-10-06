@@ -1,0 +1,139 @@
+/* Styles globaux */
+@import '@fontsource-variable/source-sans-3';
+
+/*
+ * Couleurs tirées du logo MNP, en deux thèmes.
+ * Le thème actif est posé sur <html data-theme="light|dark"> avant le premier rendu (voir index.html).
+ */
+:root {
+  color-scheme: light;
+
+  /* Marque */
+  --mnp-orange: #d07000;
+  --mnp-yellow: #ebac00;
+
+  /* Surfaces */
+  --surface: #ffffff;          /* fond principal */
+  --cream: #fbf5ea;            /* fond secondaire : menu, encarts, champs en lecture seule */
+  --surface-hover: #f3e6d1;    /* survol sur fond secondaire */
+  --surface-raised: #ffffff;   /* élément actif posé sur le fond secondaire */
+  --surface-glass: rgba(255, 255, 255, 0.94);
+
+  /* Texte et traits */
+  --ink: #2b1d12;
+  --ink-soft: #6b5444;
+  --placeholder: #8f7a68;
+  --line: #e6d9c7;
+  --line-strong: #cdb79c;
+  --slot-line: #efe3d1;
+  --circuit-line: #e8cfa9;
+
+  /* Accent */
+  --accent: #a84f06;           /* fond des boutons principaux */
+  --accent-hover: #8a4105;
+  --on-accent: #ffffff;        /* texte sur l'accent */
+  --accent-text: #a84f06;      /* liens, éléments actifs, icônes */
+  --accent-text-strong: #8a4105;
+  --mnp-orange-strong: var(--accent-text);
+  --mnp-orange-deep: var(--accent-text-strong);
+
+  /* États */
+  --disabled-bg: #d9c4ad;
+  --alert-text: #8a3b12;
+  --focus-ring: rgba(235, 172, 0, 0.35);
+  --selection: #fbe0a8;
+  --overlay: rgba(43, 29, 18, 0.35);
+  --shadow-rgb: 43 29 18;
+  --accent-shadow-rgb: 138 65 5;
+
+  /* Carte */
+  --map-sea: #aad3df;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --surface: #17120e;
+  --cream: #211a14;
+  --surface-hover: #2c231b;
+  --surface-raised: #33291f;
+  --surface-glass: rgba(23, 18, 14, 0.9);
+
+  --ink: #f3eadf;
+  --ink-soft: #bba895;
+  --placeholder: #9c8877;
+  --line: #382c23;
+  --line-strong: #5a4838;
+  --slot-line: #33281f;
+  --circuit-line: #5a4330;
+
+  --accent: #b85c0a;
+  --accent-hover: #9f4f08;
+  --on-accent: #ffffff;
+  --accent-text: #f0a35a;
+  --accent-text-strong: #f7bd84;
+
+  --disabled-bg: #4a3b2f;
+  --alert-text: #f29a74;
+  --focus-ring: rgba(235, 172, 0, 0.3);
+  --selection: #6b4410;
+  --overlay: rgba(0, 0, 0, 0.55);
+  --shadow-rgb: 0 0 0;
+  --accent-shadow-rgb: 0 0 0;
+
+  --map-sea: #1f2c31;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: 'Source Sans 3 Variable', 'Segoe UI', system-ui, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--ink);
+  background: var(--surface);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--selection);
+  color: var(--ink);
+}
+
+/* Texte réservé aux lecteurs d'écran */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+a {
+  color: var(--accent-text);
+  text-underline-offset: 3px;
+}
+
+a:focus-visible {
+  outline: 3px solid var(--mnp-yellow);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Fond de carte assombri en mode sombre (tuiles OpenStreetMap inversées) */
+:root[data-theme='dark'] .fond-carte {
+  filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.88) saturate(0.7);
+}

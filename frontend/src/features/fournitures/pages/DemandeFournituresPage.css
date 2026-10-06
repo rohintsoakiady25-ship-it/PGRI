@@ -1,0 +1,97 @@
+/* Tableau des lignes de fournitures */
+.lignes {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.lignes th {
+  padding: 0 0.5rem 0.5rem 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: left;
+  color: var(--ink-soft);
+}
+
+.lignes td {
+  padding: 0 0.5rem 0.625rem 0;
+  vertical-align: middle;
+}
+
+.lignes th:first-child {
+  width: 38%;
+}
+
+.lignes__unite {
+  width: 6rem;
+}
+
+.lignes__qte {
+  width: 7rem;
+}
+
+.lignes__action {
+  width: 2.75rem;
+  padding-right: 0 !important;
+}
+
+.lignes__remove {
+  display: grid;
+  place-items: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+
+.lignes__remove:hover {
+  border-color: var(--line);
+  color: var(--mnp-orange-deep);
+}
+
+.lignes__remove:focus-visible {
+  outline: 3px solid var(--mnp-yellow);
+  outline-offset: 2px;
+}
+
+/* Sur mobile, chaque ligne devient un bloc */
+@media (max-width: 560px) {
+  .lignes thead {
+    display: none;
+  }
+
+  .lignes tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr auto;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    margin-bottom: 0.75rem;
+    border: 1px solid var(--line);
+    border-radius: 10px;
+  }
+
+  .lignes td {
+    padding: 0;
+    width: auto !important;
+  }
+
+  .lignes td[data-label='Article'],
+  .lignes td[data-label='Observations'] {
+    grid-column: 1 / -1;
+  }
+
+  .lignes td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+
+  .lignes__action {
+    align-self: end;
+  }
+}

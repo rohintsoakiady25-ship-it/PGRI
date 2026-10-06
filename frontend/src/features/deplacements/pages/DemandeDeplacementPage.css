@@ -1,0 +1,154 @@
+/* Barre au-dessus de la carte : ce que place un clic */
+.carte-barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 0.75rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.875rem;
+}
+
+.carte-barre__label {
+  color: var(--ink-soft);
+}
+
+.carte-barre__etat {
+  color: var(--ink-soft);
+  font-style: italic;
+}
+
+.segment {
+  display: inline-flex;
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+}
+
+.segment__option {
+  position: relative;
+  padding: 0.3rem 0.75rem;
+  border-radius: 6px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.segment__option input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.segment__option:has(input:checked) {
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+}
+
+.segment__option:has(input:focus-visible) {
+  outline: 3px solid var(--mnp-yellow);
+  outline-offset: 1px;
+}
+
+/* Distance et itinéraires */
+.trajet {
+  margin-top: 0.75rem;
+}
+
+.trajet__message {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.trajet__message--alerte {
+  color: var(--alert-text);
+}
+
+.trajet__resume {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.25rem 0.625rem;
+  margin: 0;
+}
+
+.trajet__distance {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--mnp-orange-deep);
+  font-variant-numeric: tabular-nums;
+}
+
+.trajet__detail {
+  font-size: 0.9375rem;
+  color: var(--ink-soft);
+}
+
+.trajet__source {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.itineraires {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  border: 0;
+}
+
+.itineraires__titre {
+  width: 100%;
+  margin-bottom: 0.375rem;
+  padding: 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.itineraires__option {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  transition: border-color 150ms ease, background-color 150ms ease;
+}
+
+.itineraires__option:hover {
+  border-color: var(--line-strong);
+}
+
+.itineraires__option:has(input:checked) {
+  border-color: var(--mnp-orange-strong);
+  background: var(--cream);
+}
+
+.itineraires__option:has(input:focus-visible) {
+  outline: 3px solid var(--mnp-yellow);
+  outline-offset: 2px;
+}
+
+.itineraires__nom {
+  font-weight: 600;
+}
+
+.itineraires__valeurs {
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Champs propres à la mission : visibles seulement si « Mission » est coché (CSS uniquement). */
+.mission-seulement {
+  display: none;
+}
+
+.demande__form:has(#type-mission:checked) .mission-seulement {
+  display: block;
+}

@@ -1,0 +1,53 @@
+.carte-mada {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--map-sea); /* couleur de la mer, visible pendant le chargement */
+}
+
+.carte-mada--selection .ol-viewport {
+  cursor: crosshair;
+}
+
+/* Contrôles OpenLayers aux couleurs MNP */
+.carte-mada .ol-zoom {
+  top: 0.625rem;
+  left: 0.625rem;
+  padding: 0;
+  background: none;
+}
+
+.carte-mada .ol-zoom button {
+  width: 2rem;
+  height: 2rem;
+  margin: 0 0 2px;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--mnp-orange-deep);
+  font-size: 1.125rem;
+  box-shadow: 0 1px 3px rgb(var(--shadow-rgb) / 0.25);
+  cursor: pointer;
+}
+
+.carte-mada .ol-zoom button:hover {
+  background: var(--cream);
+}
+
+.carte-mada .ol-zoom button:focus-visible {
+  outline: 3px solid var(--mnp-yellow);
+  outline-offset: 1px;
+}
+
+.carte-mada .ol-scale-line {
+  left: 0.625rem;
+  bottom: 0.625rem;
+  background: var(--surface-glass);
+}
+
+.carte-mada .ol-scale-line-inner {
+  border-color: var(--ink-soft);
+  color: var(--ink);
+  font-family: inherit;
+}

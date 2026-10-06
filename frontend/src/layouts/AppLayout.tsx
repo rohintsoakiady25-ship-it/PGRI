@@ -3,23 +3,43 @@ import { Link, NavLink, useLocation } from 'react-router-dom';
 import logoMnp from '@/assets/logo-mnp.png';
 import BoutonTheme from '@/theme/BoutonTheme';
 import {
-  IconAccueil, IconFournitures, IconMenu, IconMesDemandes, IconPanneau, IconSalle, IconUtilisateur, IconVehicule,
+  IconAccueil, IconChauffeur, IconChevron, IconFournitures, IconMenu, IconMesDemandes, IconNouvelleDemande, IconPanneau,
+  IconSalle, IconUtilisateur, IconVehicule,
 } from '@/components/common/icons';
 import './AppLayout.css';
 
 const CLE_REPLIE = 'pgri.menuReplie';
 
-const menu = [
+interface LienMenu {
+  to: string;
+  label: string;
+  icone: ReactNode;
+  /** Sous-menus : le lien devient un groupe dépliable. */
+  enfants?: { to: string; label: string; icone: ReactNode }[];
+}
+
+const menu: { titre: string | null; liens: LienMenu[] }[] = [
   { titre: null, liens: [{ to: '/accueil', label: 'Accueil', icone: <IconAccueil /> }] },
   {
-    titre: 'Nouvelle demande',
+    titre: 'Modules',
     liens: [
-      { to: '/demandes/deplacement', label: 'Déplacement', icone: <IconVehicule /> },
+      {
+        to: '/demandes/deplacement',
+        label: 'Déplacements',
+        icone: <IconVehicule />,
+        enfants: [
+          { to: '/demandes/deplacement', label: 'Demande', icone: <IconNouvelleDemande /> },
+          { to: '/deplacements/vehicules', label: 'Liste des voitures', icone: <IconVehicule taille={18} /> },
+          { to: '/deplacements/chauffeurs', label: 'Liste des chauffeurs', icone: <IconChauffeur /> },
+        ],
+      },
       { to: '/demandes/salle', label: 'Salle de réunion', icone: <IconSalle /> },
       { to: '/demandes/fournitures', label: 'Fournitures', icone: <IconFournitures /> },
     ],
   },
 ];
+
+const contientPage = (lien: LienMenu, chemin: string) => lien.enfants?.some((e) => e.to === chemin) ?? false;
 
 function lireReplie() {
   try {
@@ -34,9 +54,22 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const [replie, setReplie] = useState(lireReplie);
   const [ouvertMobile, setOuvertMobile] = useState(false);
   const { pathname } = useLocation();
+  // Groupes dépliés : celui de la page courante est ouvert d'office
+  const [groupesOuverts, setGroupesOuverts] = useState<Set<string>>(
+    () => new Set(menu.flatMap((g) => g.liens).filter((l) => contientPage(l, pathname)).map((l) => l.label)),
+  );
 
   // Sur mobile, le menu se referme après navigation
   useEffect(() => setOuvertMobile(false), [pathname]);
+
+  function basculerGroupe(label: string) {
+    setGroupesOuverts((ouverts) => {
+      const suivant = new Set(ouverts);
+      if (suivant.has(label)) suivant.delete(label);
+      else suivant.add(label);
+      return suivant;
+    });
+  }
 
   function basculer() {
     setReplie((r) => {
@@ -76,14 +109,53 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <div key={i} className="menu__groupe">
               {groupe.titre && <p className="menu__titre">{groupe.titre}</p>}
               <ul>
-                {groupe.liens.map((l) => (
-                  <li key={l.to}>
-                    <NavLink to={l.to} className="menu__lien" title={replie ? l.label : undefined}>
-                      <span className="menu__icone">{l.icone}</span>
-                      <span className="menu__label">{l.label}</span>
-                    </NavLink>
-                  </li>
-                ))}
+                {groupe.liens.map((l) => {
+                  if (!l.enfants) {
+                    return (
+                      <li key={l.to}>
+                        <NavLink to={l.to} className="menu__lien" title={replie ? l.label : undefined}>
+                          <span className="menu__icone">{l.icone}</span>
+                          <span className="menu__label">{l.label}</span>
+                        </NavLink>
+                      </li>
+                    );
+                  }
+
+                  const ouvert = groupesOuverts.has(l.label);
+                  const actif = contientPage(l, pathname);
+                  const idSousMenu = `sous-menu-${l.label}`;
+                  return (
+                    <li key={l.label}>
+                      {/* Menu replié : l'icône mène directement à la première page du groupe */}
+                      <NavLink to={l.to} className={`menu__lien menu__lien--raccourci${actif ? ' active' : ''}`} title={l.label}>
+                        <span className="menu__icone">{l.icone}</span>
+                      </NavLink>
+                      <button
+                        type="button"
+                        className={`menu__lien menu__groupe-bouton${actif ? ' menu__groupe-bouton--actif' : ''}`}
+                        aria-expanded={ouvert}
+                        aria-controls={idSousMenu}
+                        onClick={() => basculerGroupe(l.label)}
+                      >
+                        <span className="menu__icone">{l.icone}</span>
+                        <span className="menu__label">{l.label}</span>
+                        <span className="menu__chevron">
+                          <IconChevron ouvert={ouvert} />
+                        </span>
+                      </button>
+                      <ul id={idSousMenu} className="menu__sous-menu" hidden={!ouvert}>
+                        {l.enfants.map((e) => (
+                          <li key={e.to}>
+                            <NavLink to={e.to} end className="menu__lien menu__lien--enfant">
+                              <span className="menu__icone">{e.icone}</span>
+                              <span className="menu__label">{e.label}</span>
+                            </NavLink>
+                          </li>
+                        ))}
+                      </ul>
+                    </li>
+                  );
+                })}
               </ul>
             </div>
           ))}

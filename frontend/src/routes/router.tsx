@@ -4,6 +4,8 @@ import AccueilPage from '@/features/accueil/pages/AccueilPage';
 import DemandeDeplacementPage from '@/features/deplacements/pages/DemandeDeplacementPage';
 import DemandeSallePage from '@/features/salles/pages/DemandeSallePage';
 import DemandeFournituresPage from '@/features/fournitures/pages/DemandeFournituresPage';
+import ListeVehiculesPage from '@/features/vehicules-chauffeurs/pages/ListeVehiculesPage';
+import ListeChauffeursPage from '@/features/vehicules-chauffeurs/pages/ListeChauffeursPage';
 import PagePlaceholder from '@/components/common/PagePlaceholder';
 
 export const router = createBrowserRouter([
@@ -15,6 +17,8 @@ export const router = createBrowserRouter([
     element: <PagePlaceholder titre="Mes demandes en cours" description="La liste de vos demandes et de leur statut sera développée ici." />,
   },
   { path: '/demandes/deplacement', element: <DemandeDeplacementPage /> },
+  { path: '/deplacements/vehicules', element: <ListeVehiculesPage /> },
+  { path: '/deplacements/chauffeurs', element: <ListeChauffeursPage /> },
   { path: '/demandes/salle', element: <DemandeSallePage /> },
   { path: '/demandes/fournitures', element: <DemandeFournituresPage /> },
 ]);

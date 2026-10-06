@@ -1,0 +1,156 @@
+.liste__titre {
+  margin: 0;
+  font-size: clamp(1.75rem, 3.5vw, 2.125rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.liste__intro {
+  max-width: 62ch;
+  margin: 0.4rem 0 1.75rem;
+  color: var(--ink-soft);
+}
+
+/* ---------- Recherche et filtres ---------- */
+
+.liste__outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.liste__recherche {
+  display: flex;
+  flex: 1 1 18rem;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink-soft);
+  transition: border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.liste__recherche:hover {
+  border-color: var(--line-strong);
+}
+
+.liste__recherche:focus-within {
+  border-color: var(--mnp-orange);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+.liste__recherche input {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: none;
+  font: inherit;
+  font-size: 1rem;
+  color: var(--ink);
+  caret-color: var(--mnp-orange);
+}
+
+.liste__recherche input::placeholder {
+  color: var(--placeholder);
+}
+
+.liste__recherche input::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.liste__filtre {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.liste__filtre-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.liste__filtre select {
+  min-width: 11rem;
+  min-height: 2.75rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  font: inherit;
+  color: var(--ink);
+  cursor: pointer;
+}
+
+.liste__filtre select:hover {
+  border-color: var(--line-strong);
+}
+
+.liste__filtre select:focus {
+  outline: none;
+  border-color: var(--mnp-orange);
+  box-shadow: 0 0 0 3px var(--focus-ring);
+}
+
+/* ---------- Tableau ---------- */
+
+.liste__cadre {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.liste__table {
+  width: 100%;
+  min-width: 40rem;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.liste__table th {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--line);
+  background: var(--cream);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: left;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.liste__table td {
+  padding: 0.75rem 1rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.liste__table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.liste__table tbody tr:hover td:not(.liste__vide) {
+  background: var(--cream);
+}
+
+.liste__num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.liste__vide {
+  padding: 2.5rem 1rem !important;
+  text-align: center;
+  color: var(--ink-soft);
+}
+
+.liste__compte {
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}

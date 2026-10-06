@@ -55,7 +55,36 @@ export const IconPanneau = ({ taille = 20, replie = false }: { taille?: number; 
   </svg>
 );
 
-export const IconMenu = ({ taille = 22 }: { taille?: number }) => (
+export const IconNouvelleDemande = ({ taille = 18 }: { taille?: number }) => (
+  <svg {...base(taille)}>
+    <path d="M14 3.5H7a2 2 0 0 0-2 2v13a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-10Z" />
+    <path d="M14 3.5v5h5M12 11.5v6M9 14.5h6" />
+  </svg>
+);
+
+/** Volant : chauffeurs. */
+export const IconChauffeur = ({ taille = 18 }: { taille?: number }) => (
+  <svg {...base(taille)}>
+    <circle cx="12" cy="12" r="8.5" />
+    <circle cx="12" cy="12" r="2" />
+    <path d="M3.6 10.5 10 12M20.4 10.5 14 12M12 14v6.5" />
+  </svg>
+);
+
+export const IconChevron = ({ taille = 16, ouvert = false }: { taille?: number; ouvert?: boolean }) => (
+  <svg {...base(taille)}>
+    <path d={ouvert ? 'm6 9 6 6 6-6' : 'm9 6 6 6-6 6'} />
+  </svg>
+);
+
+export const IconRecherche = ({ taille = 18 }: { taille?: number }) => (
+  <svg {...base(taille)}>
+    <circle cx="11" cy="11" r="6.5" />
+    <path d="m20 20-4.2-4.2" />
+  </svg>
+);
+
+export const IconMenu =({ taille = 22 }: { taille?: number }) => (
   <svg {...base(taille)}>
     <path d="M4 7h16M4 12h16M4 17h16" />
   </svg>

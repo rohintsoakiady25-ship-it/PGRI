@@ -1,10 +1,5 @@
 /* Gabarit des pages de demande */
 
-.demande__back {
-  margin: 0 0 1rem;
-  font-size: 0.9375rem;
-}
-
 .demande__title {
   margin: 0;
   font-size: clamp(1.75rem, 3.5vw, 2.125rem);

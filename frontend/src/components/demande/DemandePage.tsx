@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { Link } from 'react-router-dom';
 import AppLayout from '@/layouts/AppLayout';
 import './DemandePage.css';
 
@@ -21,9 +20,6 @@ export default function DemandePage({ titre, intro, circuit, noteCircuit, childr
   return (
     <AppLayout>
       <div className="demande">
-        <p className="demande__back">
-          <Link to="/accueil">← Retour à l'accueil</Link>
-        </p>
         <h1 className="demande__title">{titre}</h1>
         <p className="demande__intro">{intro}</p>
 

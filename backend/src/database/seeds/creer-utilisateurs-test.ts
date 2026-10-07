@@ -2,7 +2,8 @@
  * Crée des comptes LOCAUX de test (développement uniquement).
  * Les identifiants et mots de passe sont dans src/database/seeds/utilisateurs-test.local.json
  * (fichier généré au premier lancement, ignoré par Git).
- * Lancement : npm run seed:test   —   comptes déjà existants : laissés tels quels.
+ * Lancement : npm run seed:test   —   comptes déjà existants : mis à jour d'après le fichier
+ * (pour changer un mot de passe de test : modifier le fichier puis relancer).
  */
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -60,23 +61,17 @@ async function main() {
   const depot = source.getRepository(Utilisateur);
   for (const c of comptes) {
     const login = c.login.toLowerCase();
-    if (await depot.findOne({ where: { login, source: SourceCompte.LOCAL } })) {
-      console.log(`  = ${login} (existe déjà)`);
-      continue;
-    }
-    await depot.save(
-      depot.create({
-        login,
-        source: SourceCompte.LOCAL,
-        motDePasseHash: await bcrypt.hash(c.motDePasse, 12),
-        nomComplet: c.nomComplet,
-        direction: c.direction,
-        service: c.service,
-        roles: c.roles,
-        actif: c.actif,
-      }),
-    );
-    console.log(`  + ${login} — ${c.role_teste}`);
+    const existant = await depot.findOne({ where: { login, source: SourceCompte.LOCAL } });
+    // Comptes de test : le fichier fait foi (mot de passe, rôles, état) à chaque lancement
+    const u = existant ?? depot.create({ login, source: SourceCompte.LOCAL });
+    u.motDePasseHash = await bcrypt.hash(c.motDePasse, 12);
+    u.nomComplet = c.nomComplet;
+    u.direction = c.direction;
+    u.service = c.service;
+    u.roles = c.roles;
+    u.actif = c.actif;
+    await depot.save(u);
+    console.log(`  ${existant ? '~' : '+'} ${login} — ${c.role_teste}${existant ? ' (mis à jour)' : ''}`);
   }
   await source.destroy();
   console.log(`Identifiants et mots de passe : ${FICHIER}`);

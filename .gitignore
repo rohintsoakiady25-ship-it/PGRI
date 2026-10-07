@@ -10,3 +10,4 @@ coverage/
 *.tsbuildinfo
 *.local.sql
 *.local.json
+backend/certs/

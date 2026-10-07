@@ -2,7 +2,7 @@
   "name": "pgri-backend",
   "version": "0.1.0",
   "private": true,
-  "description": "API PGRI \u2014 NestJS",
+  "description": "API PGRI — NestJS",
   "scripts": {
     "build": "nest build",
     "start": "nest start",
@@ -13,7 +13,10 @@
     "test:e2e": "jest --config ./test/jest-e2e.json",
     "typeorm": "typeorm-ts-node-commonjs -d src/database/data-source.ts",
     "migration:generate": "npm run typeorm -- migration:generate",
-    "migration:run": "npm run typeorm -- migration:run"
+    "migration:run": "npm run typeorm -- migration:run",
+    "seed:admin": "ts-node src/database/seeds/creer-admin.ts",
+    "db:synchroniser": "ts-node src/database/seeds/synchroniser.ts",
+    "seed:test": "ts-node src/database/seeds/creer-utilisateurs-test.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",
@@ -23,6 +26,7 @@
     "@nestjs/passport": "^11.0.0",
     "@nestjs/platform-express": "^11.0.0",
     "@nestjs/typeorm": "^11.0.0",
+    "bcryptjs": "^3.0.3",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
     "ldapts": "^8.0.0",

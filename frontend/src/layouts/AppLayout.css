@@ -204,6 +204,11 @@
   list-style: none;
 }
 
+/* « .menu__groupe ul » impose display:flex : l'attribut hidden doit l'emporter */
+.menu__sous-menu[hidden] {
+  display: none !important;
+}
+
 .menu__sous-menu li + li {
   margin-top: 2px;
 }
@@ -354,9 +359,22 @@
 
 .barre__deconnexion {
   margin-left: 0.5rem;
-  padding-left: 0.875rem;
+  padding: 0 0 0 0.875rem;
+  border: 0;
   border-left: 1px solid var(--line);
+  background: none;
+  font: inherit;
+  font-size: 0.875rem;
   color: var(--ink-soft);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.barre__deconnexion:focus-visible {
+  outline: 3px solid var(--mnp-yellow);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 .barre__deconnexion:hover {

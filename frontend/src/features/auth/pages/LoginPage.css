@@ -113,8 +113,74 @@
   letter-spacing: -0.01em;
 }
 
+/* Choix du type de compte */
+.login__methodes {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2px;
+  margin-top: 1.25rem;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--cream);
+}
+
+.login__methode {
+  position: relative;
+  display: grid;
+  place-items: center;
+  min-height: 2.5rem;
+  padding: 0 0.75rem;
+  border-radius: 7px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.login__methode input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.login__methode:hover {
+  color: var(--ink);
+}
+
+.login__methode:has(input:checked) {
+  background: var(--surface);
+  color: var(--accent-text);
+  box-shadow: 0 1px 2px rgb(var(--shadow-rgb) / 0.1), 0 2px 6px -2px rgb(var(--shadow-rgb) / 0.15);
+}
+
+.login__methode:has(input:focus-visible) {
+  outline: 3px solid var(--mnp-yellow);
+  outline-offset: 1px;
+}
+
+.login__note {
+  margin: -1rem 0 1.25rem;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.login__erreur {
+  margin: 0 0 1.25rem;
+  padding: 0.625rem 0.875rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--alert-text) 12%, transparent);
+  color: var(--alert-text);
+  font-size: 0.875rem;
+}
+
+.login__field input[aria-invalid='true'] {
+  border-color: var(--alert-text);
+}
+
 .login__lead {
-  margin: 0.5rem 0 2rem;
+  margin: 1rem 0 1.5rem;
   font-size: 0.975rem;
   line-height: 1.5;
   color: var(--ink-soft);

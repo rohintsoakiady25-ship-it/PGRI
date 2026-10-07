@@ -1,5 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { Link, NavLink, useLocation } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/auth/AuthContext';
 import logoMnp from '@/assets/logo-mnp.png';
 import BoutonTheme from '@/theme/BoutonTheme';
 import {
@@ -54,6 +55,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const [replie, setReplie] = useState(lireReplie);
   const [ouvertMobile, setOuvertMobile] = useState(false);
   const { pathname } = useLocation();
+  const { utilisateur, deconnecter } = useAuth();
+  const navigate = useNavigate();
+
+  function seDeconnecter() {
+    deconnecter();
+    navigate('/login', { replace: true });
+  }
   // Groupes dépliés : celui de la page courante est ouvert d'office
   const [groupesOuverts, setGroupesOuverts] = useState<Set<string>>(
     () => new Set(menu.flatMap((g) => g.liens).filter((l) => contientPage(l, pathname)).map((l) => l.label)),
@@ -183,10 +191,12 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <span className="barre__avatar" aria-hidden="true">
               <IconUtilisateur />
             </span>
-            <span className="barre__nom">Utilisateur MNP</span>
-            <Link to="/login" className="barre__deconnexion">
+            <span className="barre__nom" title={utilisateur ? `${utilisateur.login} · ${utilisateur.source === 'AD' ? 'Active Directory' : 'compte local'}` : undefined}>
+              {utilisateur?.nomComplet ?? ''}
+            </span>
+            <button type="button" className="barre__deconnexion" onClick={seDeconnecter}>
               Se déconnecter
-            </Link>
+            </button>
           </div>
         </header>
 

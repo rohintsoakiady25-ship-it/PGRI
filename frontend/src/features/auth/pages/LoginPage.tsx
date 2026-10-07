@@ -28,6 +28,7 @@ export default function LoginPage() {
   const [adDisponible, setAdDisponible] = useState<boolean | null>(null);
   const [identifiant, setIdentifiant] = useState('');
   const [motDePasse, setMotDePasse] = useState('');
+  const [mdpVisible, setMdpVisible] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
 
@@ -62,6 +63,7 @@ export default function LoginPage() {
     } catch (err) {
       setErreur(messageErreur(err, 'Connexion impossible. Réessayez.'));
       setMotDePasse('');
+      setMdpVisible(false);
     } finally {
       setEnvoi(false);
     }
@@ -141,15 +143,42 @@ export default function LoginPage() {
 
           <div className="login__field">
             <label htmlFor="motDePasse">Mot de passe</label>
-            <input
-              id="motDePasse"
-              name="motDePasse"
-              type="password"
-              autoComplete="current-password"
-              value={motDePasse}
-              onChange={(e) => setMotDePasse(e.target.value)}
-              aria-invalid={Boolean(erreur) || undefined}
-            />
+            <div className="login__mdp">
+              <input
+                id="motDePasse"
+                name="motDePasse"
+                type={mdpVisible ? 'text' : 'password'}
+                autoComplete="current-password"
+                value={motDePasse}
+                onChange={(e) => setMotDePasse(e.target.value)}
+                aria-invalid={Boolean(erreur) || undefined}
+              />
+              <button
+                type="button"
+                className="login__voir-mdp"
+                onClick={() => setMdpVisible((v) => !v)}
+                aria-pressed={mdpVisible}
+                aria-controls="motDePasse"
+                aria-label={mdpVisible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+                title={mdpVisible ? 'Masquer le mot de passe' : 'Afficher le mot de passe'}
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75"
+                  strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  {mdpVisible ? (
+                    <>
+                      <path d="M3 3l18 18" />
+                      <path d="M10.6 5.1A9.7 9.7 0 0 1 12 5c5 0 8.5 4.2 9.5 7-0.4 1.1-1.2 2.5-2.4 3.7M6.6 6.6C4.6 7.9 3.1 9.9 2.5 12c1 2.8 4.5 7 9.5 7 1.9 0 3.6-0.6 5-1.5" />
+                      <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
+                    </>
+                  ) : (
+                    <>
+                      <path d="M2.5 12C3.5 9.2 7 5 12 5s8.5 4.2 9.5 7c-1 2.8-4.5 7-9.5 7s-8.5-4.2-9.5-7Z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </>
+                  )}
+                </svg>
+              </button>
+            </div>
           </div>
 
           <button className="login__submit" type="submit" disabled={envoi}>

@@ -175,6 +175,55 @@
   font-size: 0.875rem;
 }
 
+/* Mot de passe : bouton « œil » dans le champ */
+.login__mdp {
+  position: relative;
+  display: flex;
+}
+
+.login__mdp input {
+  flex: 1;
+  min-width: 0;
+  padding-right: 3rem;
+}
+
+/* œil natif d'Edge masqué (on affiche le nôtre) */
+.login__mdp input::-ms-reveal,
+.login__mdp input::-ms-clear {
+  display: none;
+}
+
+.login__voir-mdp {
+  position: absolute;
+  top: 50%;
+  right: 0.25rem;
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-top: -1.125rem;
+  border: 0;
+  border-radius: 6px;
+  background: none;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: color 150ms ease, background-color 150ms ease;
+}
+
+.login__voir-mdp:hover,
+.login__voir-mdp[aria-pressed='true'] {
+  color: var(--accent-text);
+}
+
+.login__voir-mdp:hover {
+  background: var(--cream);
+}
+
+.login__voir-mdp:focus-visible {
+  outline: 3px solid var(--mnp-yellow);
+  outline-offset: 0;
+}
+
 .login__field input[aria-invalid='true'] {
   border-color: var(--alert-text);
 }

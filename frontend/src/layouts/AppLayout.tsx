@@ -4,7 +4,7 @@ import { useAuth } from '@/auth/AuthContext';
 import logoMnp from '@/assets/logo-mnp.png';
 import BoutonTheme from '@/theme/BoutonTheme';
 import {
-  IconAccueil, IconChauffeur, IconChevron, IconFournitures, IconMenu, IconMesDemandes, IconNouvelleDemande, IconPanneau,
+  IconAccueil, IconChauffeur, IconChevron, IconDeconnexion, IconFournitures, IconMenu, IconMesDemandes, IconNouvelleDemande, IconPanneau,
   IconSalle, IconUtilisateur, IconVehicule,
 } from '@/components/common/icons';
 import './AppLayout.css';
@@ -169,7 +169,15 @@ export default function AppLayout({ children }: { children: ReactNode }) {
           ))}
         </nav>
 
-        <p className="menu__pied">DSII — Madagascar National Parks</p>
+        <div className="menu__bas">
+          <button type="button" className="menu__lien menu__deconnexion" onClick={seDeconnecter} title={replie ? 'Se déconnecter' : undefined}>
+            <span className="menu__icone">
+              <IconDeconnexion />
+            </span>
+            <span className="menu__label">Se déconnecter</span>
+          </button>
+          <p className="menu__pied">DSII — Madagascar National Parks</p>
+        </div>
       </aside>
 
       <button type="button" className="shell__voile" aria-label="Fermer le menu" onClick={() => setOuvertMobile(false)} />
@@ -194,9 +202,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <span className="barre__nom" title={utilisateur ? `${utilisateur.login} · ${utilisateur.source === 'AD' ? 'Active Directory' : 'compte local'}` : undefined}>
               {utilisateur?.nomComplet ?? ''}
             </span>
-            <button type="button" className="barre__deconnexion" onClick={seDeconnecter}>
-              Se déconnecter
-            </button>
           </div>
         </header>
 

@@ -84,7 +84,14 @@ export const IconRecherche = ({ taille = 18 }: { taille?: number }) => (
   </svg>
 );
 
-export const IconMenu =({ taille = 22 }: { taille?: number }) => (
+export const IconDeconnexion = ({ taille = 20 }: { taille?: number }) => (
+  <svg {...base(taille)}>
+    <path d="M14 4.5h3.5a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H14" />
+    <path d="M10 8l-4 4 4 4M6 12h9.5" />
+  </svg>
+);
+
+export const IconMenu = ({ taille = 22 }: { taille?: number }) => (
   <svg {...base(taille)}>
     <path d="M4 7h16M4 12h16M4 17h16" />
   </svg>

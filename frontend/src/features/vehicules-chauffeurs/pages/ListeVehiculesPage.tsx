@@ -3,10 +3,11 @@ import ListePage from '@/components/liste/ListePage';
 import Badge, { type TonBadge } from '@/components/common/Badge';
 import Modale from '@/components/common/Modale';
 import { useAuth } from '@/auth/AuthContext';
-import { peutGererLogistique } from '@/auth/droits';
+import { peutGererReferentiels } from '@/auth/droits';
 import { LIBELLE_DISPONIBILITE, LIBELLE_ETAT, vehiculesApi, type Disponibilite, type EtatTechnique, type Vehicule } from '../api';
 import { normaliser, useListe } from '../useListe';
 import FormulaireVehicule from '../components/FormulaireVehicule';
+import ConfirmerSuppression from '../components/ConfirmerSuppression';
 
 const TON_ETAT: Record<EtatTechnique, TonBadge> = { BON: 'succes', A_SURVEILLER: 'attention', EN_REPARATION: 'danger' };
 const TON_DISPO: Record<Disponibilite, TonBadge> = { DISPONIBLE: 'succes', INDISPONIBLE: 'attention', HORS_SERVICE: 'neutre' };
@@ -15,12 +16,13 @@ const nombre = (n: number) => n.toLocaleString('fr-FR');
 /** Liste des voitures (entité Vehicule, Figure 3). */
 export default function ListeVehiculesPage() {
   const { utilisateur } = useAuth();
-  const gestion = peutGererLogistique(utilisateur);
+  const gestion = peutGererReferentiels(utilisateur);
   const { elements, chargement, erreur, recharger } = useListe(vehiculesApi.lister);
   const [recherche, setRecherche] = useState('');
   const [etat, setEtat] = useState('');
   const [dispo, setDispo] = useState('');
   const [edition, setEdition] = useState<Vehicule | 'nouveau' | null>(null);
+  const [aSupprimer, setASupprimer] = useState<Vehicule | null>(null);
 
   const visibles = useMemo(() => {
     const q = normaliser(recherche.trim());
@@ -74,6 +76,10 @@ export default function ListeVehiculesPage() {
                       aria-label={`Modifier le véhicule ${v.immatriculation}`}>
                       Modifier
                     </button>
+                    <button type="button" className="btn btn--petit btn--petit-danger" onClick={() => setASupprimer(v)}
+                      aria-label={`Supprimer le véhicule ${v.immatriculation}`}>
+                      Supprimer
+                    </button>
                   </span>,
                 ]
               : []),
@@ -104,6 +110,19 @@ export default function ListeVehiculesPage() {
             recharger();
           }}
         />
+      </Modale>
+      <Modale ouverte={aSupprimer !== null} titre="Supprimer le véhicule ?" onFermer={() => setASupprimer(null)}>
+        {aSupprimer && (
+          <ConfirmerSuppression
+            nom={aSupprimer.immatriculation}
+            supprimer={() => vehiculesApi.supprimer(aSupprimer.id)}
+            onAnnuler={() => setASupprimer(null)}
+            onSupprime={() => {
+              setASupprimer(null);
+              recharger();
+            }}
+          />
+        )}
       </Modale>
     </>
   );

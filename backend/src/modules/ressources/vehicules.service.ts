@@ -44,6 +44,13 @@ export class VehiculesService {
     return { ...enregistre, disponibilite: this.disponibilite(enregistre) };
   }
 
+  /** Suppression définitive (l'administrateur peut aussi le mettre hors service sans le supprimer). */
+  async supprimer(id: string): Promise<void> {
+    const v = await this.depot.findOne({ where: { id } });
+    if (!v) throw new NotFoundException('Véhicule introuvable.');
+    await this.depot.remove(v);
+  }
+
   private async verifierImmatriculationLibre(immatriculation: string) {
     if (await this.depot.exists({ where: { immatriculation } })) {
       throw new ConflictException(`Un véhicule immatriculé « ${immatriculation} » existe déjà.`);

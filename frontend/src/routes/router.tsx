@@ -1,5 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import RouteProtegee from '@/auth/RouteProtegee';
+import RouteReservee from '@/auth/RouteReservee';
+import { peutGererReferentiels } from '@/auth/droits';
 import LoginPage from '@/features/auth/pages/LoginPage';
 import AccueilPage from '@/features/accueil/pages/AccueilPage';
 import DemandeDeplacementPage from '@/features/deplacements/pages/DemandeDeplacementPage';
@@ -22,8 +24,14 @@ export const router = createBrowserRouter([
         element: <PagePlaceholder titre="Mes demandes en cours" description="La liste de vos demandes et de leur statut sera développée ici." />,
       },
       { path: '/demandes/deplacement', element: <DemandeDeplacementPage /> },
-      { path: '/deplacements/vehicules', element: <ListeVehiculesPage /> },
-      { path: '/deplacements/chauffeurs', element: <ListeChauffeursPage /> },
+      {
+        // Listes des voitures et des chauffeurs : logistique et administrateur seulement
+        element: <RouteReservee autorise={peutGererReferentiels} />,
+        children: [
+          { path: '/deplacements/vehicules', element: <ListeVehiculesPage /> },
+          { path: '/deplacements/chauffeurs', element: <ListeChauffeursPage /> },
+        ],
+      },
       { path: '/demandes/salle', element: <DemandeSallePage /> },
       { path: '/demandes/fournitures', element: <DemandeFournituresPage /> },
     ],

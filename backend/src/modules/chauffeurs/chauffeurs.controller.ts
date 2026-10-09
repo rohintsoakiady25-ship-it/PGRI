@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Put, Query, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, HttpCode, Param, ParseUUIDPipe, Post, Put, Query, UseGuards } from '@nestjs/common';
 import { Roles } from '../../common/decorators/roles.decorator';
 import { Role } from '../../common/enums/role.enum';
 import { RolesGuard } from '../../common/guards/roles.guard';
@@ -6,9 +6,10 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { ChauffeurDto, FiltreChauffeursDto } from './dto/chauffeur.dto';
 import { ChauffeursService } from './chauffeurs.service';
 
-/** Liste des chauffeurs : consultation par tout utilisateur connecté ; ajout et modification par la logistique et l'administrateur. */
+/** Liste des chauffeurs : consultation, ajout, modification et suppression réservés à la logistique et à l'administrateur. */
 @Controller('chauffeurs')
 @UseGuards(JwtAuthGuard, RolesGuard)
+@Roles(Role.LOGISTIQUE, Role.ADMIN)
 export class ChauffeursController {
   constructor(private readonly chauffeurs: ChauffeursService) {}
 
@@ -18,14 +19,18 @@ export class ChauffeursController {
   }
 
   @Post()
-  @Roles(Role.LOGISTIQUE, Role.ADMIN)
   creer(@Body() dto: ChauffeurDto) {
     return this.chauffeurs.creer(dto);
   }
 
   @Put(':id')
-  @Roles(Role.LOGISTIQUE, Role.ADMIN)
   modifier(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ChauffeurDto) {
     return this.chauffeurs.modifier(id, dto);
+  }
+
+  @Delete(':id')
+  @HttpCode(204)
+  supprimer(@Param('id', ParseUUIDPipe) id: string) {
+    return this.chauffeurs.supprimer(id);
   }
 }

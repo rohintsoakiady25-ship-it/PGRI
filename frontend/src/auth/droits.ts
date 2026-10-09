@@ -5,5 +5,5 @@ export function aUnRole(utilisateur: Utilisateur | null, ...roles: string[]): bo
   return Boolean(utilisateur?.roles.some((r) => roles.includes(r)));
 }
 
-/** Gestion des référentiels de la logistique (véhicules, chauffeurs). */
-export const peutGererLogistique = (u: Utilisateur | null) => aUnRole(u, 'LOGISTIQUE', 'ADMIN');
+/** Listes des voitures et des chauffeurs (consultation et gestion) : logistique et administrateur. */
+export const peutGererReferentiels = (u: Utilisateur | null) => aUnRole(u, 'LOGISTIQUE', 'ADMIN');

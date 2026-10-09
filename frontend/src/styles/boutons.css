@@ -80,3 +80,19 @@
   background: var(--cream);
   color: var(--accent-text);
 }
+
+/* Action destructive (suppression) */
+.btn--danger {
+  background: var(--alert-text);
+  color: var(--surface); /* blanc en clair, quasi noir en sombre : lisible sur les deux fonds */
+}
+
+.btn--danger:hover {
+  background: color-mix(in srgb, var(--alert-text) 85%, #000);
+}
+
+.btn--petit-danger:hover {
+  border-color: var(--alert-text);
+  background: color-mix(in srgb, var(--alert-text) 10%, var(--surface));
+  color: var(--alert-text);
+}

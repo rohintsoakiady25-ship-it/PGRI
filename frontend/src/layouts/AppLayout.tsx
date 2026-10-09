@@ -1,6 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/auth/AuthContext';
+import { useAuth, type Utilisateur } from '@/auth/AuthContext';
+import { peutGererReferentiels } from '@/auth/droits';
 import logoMnp from '@/assets/logo-mnp.png';
 import BoutonTheme from '@/theme/BoutonTheme';
 import {
@@ -16,7 +17,7 @@ interface LienMenu {
   label: string;
   icone: ReactNode;
   /** Sous-menus : le lien devient un groupe dépliable. */
-  enfants?: { to: string; label: string; icone: ReactNode }[];
+  enfants?: { to: string; label: string; icone: ReactNode; visible?: (u: Utilisateur | null) => boolean }[];
 }
 
 const menu: { titre: string | null; liens: LienMenu[] }[] = [
@@ -30,8 +31,8 @@ const menu: { titre: string | null; liens: LienMenu[] }[] = [
         icone: <IconVehicule />,
         enfants: [
           { to: '/demandes/deplacement', label: 'Demande', icone: <IconNouvelleDemande /> },
-          { to: '/deplacements/vehicules', label: 'Liste des voitures', icone: <IconVehicule taille={18} /> },
-          { to: '/deplacements/chauffeurs', label: 'Liste des chauffeurs', icone: <IconChauffeur /> },
+          { to: '/deplacements/vehicules', label: 'Liste des voitures', icone: <IconVehicule taille={18} />, visible: peutGererReferentiels },
+          { to: '/deplacements/chauffeurs', label: 'Liste des chauffeurs', icone: <IconChauffeur />, visible: peutGererReferentiels },
         ],
       },
       { to: '/demandes/salle', label: 'Salle de réunion', icone: <IconSalle /> },
@@ -118,7 +119,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               {groupe.titre && <p className="menu__titre">{groupe.titre}</p>}
               <ul>
                 {groupe.liens.map((l) => {
-                  if (!l.enfants) {
+                  const enfants = l.enfants?.filter((e) => !e.visible || e.visible(utilisateur));
+                  // Un seul sous-menu visible (ex. « Demande » pour un agent) : simple lien, sans groupe dépliable
+                  if (!enfants || enfants.length < 2) {
                     return (
                       <li key={l.to}>
                         <NavLink to={l.to} className="menu__lien" title={replie ? l.label : undefined}>
@@ -152,7 +155,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                         </span>
                       </button>
                       <ul id={idSousMenu} className="menu__sous-menu" hidden={!ouvert}>
-                        {l.enfants.map((e) => (
+                        {enfants.map((e) => (
                           <li key={e.to}>
                             <NavLink to={e.to} end className="menu__lien menu__lien--enfant">
                               <span className="menu__icone">{e.icone}</span>

@@ -45,10 +45,12 @@ export const vehiculesApi = {
   lister: () => api.get<Vehicule[]>('/vehicules').then((r) => r.data),
   creer: (v: VehiculeSaisie) => api.post<Vehicule>('/vehicules', v).then((r) => r.data),
   modifier: (id: string, v: VehiculeSaisie) => api.put<Vehicule>(`/vehicules/${id}`, v).then((r) => r.data),
+  supprimer: (id: string) => api.delete(`/vehicules/${id}`).then(() => undefined),
 };
 
 export const chauffeursApi = {
   lister: () => api.get<Chauffeur[]>('/chauffeurs').then((r) => r.data),
   creer: (c: ChauffeurSaisie) => api.post<Chauffeur>('/chauffeurs', c).then((r) => r.data),
   modifier: (id: string, c: ChauffeurSaisie) => api.put<Chauffeur>(`/chauffeurs/${id}`, c).then((r) => r.data),
+  supprimer: (id: string) => api.delete(`/chauffeurs/${id}`).then(() => undefined),
 };

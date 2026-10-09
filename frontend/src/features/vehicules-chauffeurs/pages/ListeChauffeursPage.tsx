@@ -3,21 +3,23 @@ import ListePage from '@/components/liste/ListePage';
 import Badge, { type TonBadge } from '@/components/common/Badge';
 import Modale from '@/components/common/Modale';
 import { useAuth } from '@/auth/AuthContext';
-import { peutGererLogistique } from '@/auth/droits';
+import { peutGererReferentiels } from '@/auth/droits';
 import { chauffeursApi, LIBELLE_DISPONIBILITE, type Chauffeur, type Disponibilite } from '../api';
 import { normaliser, useListe } from '../useListe';
 import FormulaireChauffeur from '../components/FormulaireChauffeur';
+import ConfirmerSuppression from '../components/ConfirmerSuppression';
 
 const TON_DISPO: Record<Disponibilite, TonBadge> = { DISPONIBLE: 'succes', INDISPONIBLE: 'attention', HORS_SERVICE: 'neutre' };
 
 /** Liste des chauffeurs (entité Chauffeur, Figure 3). */
 export default function ListeChauffeursPage() {
   const { utilisateur } = useAuth();
-  const gestion = peutGererLogistique(utilisateur);
+  const gestion = peutGererReferentiels(utilisateur);
   const { elements, chargement, erreur, recharger } = useListe(chauffeursApi.lister);
   const [recherche, setRecherche] = useState('');
   const [dispo, setDispo] = useState('');
   const [edition, setEdition] = useState<Chauffeur | 'nouveau' | null>(null);
+  const [aSupprimer, setASupprimer] = useState<Chauffeur | null>(null);
 
   const visibles = useMemo(() => {
     const q = normaliser(recherche.trim());
@@ -66,6 +68,10 @@ export default function ListeChauffeursPage() {
                       aria-label={`Modifier le chauffeur ${c.nomComplet}`}>
                       Modifier
                     </button>
+                    <button type="button" className="btn btn--petit btn--petit-danger" onClick={() => setASupprimer(c)}
+                      aria-label={`Supprimer le chauffeur ${c.nomComplet}`}>
+                      Supprimer
+                    </button>
                   </span>,
                 ]
               : []),
@@ -96,6 +102,19 @@ export default function ListeChauffeursPage() {
             recharger();
           }}
         />
+      </Modale>
+      <Modale ouverte={aSupprimer !== null} titre="Supprimer le chauffeur ?" onFermer={() => setASupprimer(null)}>
+        {aSupprimer && (
+          <ConfirmerSuppression
+            nom={aSupprimer.nomComplet}
+            supprimer={() => chauffeursApi.supprimer(aSupprimer.id)}
+            onAnnuler={() => setASupprimer(null)}
+            onSupprime={() => {
+              setASupprimer(null);
+              recharger();
+            }}
+          />
+        )}
       </Modale>
     </>
   );

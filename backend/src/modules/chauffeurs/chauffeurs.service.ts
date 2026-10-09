@@ -40,6 +40,13 @@ export class ChauffeursService {
     return this.avecDisponibilite(await this.depot.save(c));
   }
 
+  /** Suppression définitive (l'administrateur peut aussi le mettre hors service sans le supprimer). */
+  async supprimer(id: string): Promise<void> {
+    const c = await this.depot.findOne({ where: { id } });
+    if (!c) throw new NotFoundException('Chauffeur introuvable.');
+    await this.depot.remove(c);
+  }
+
   private async verifierMatriculeLibre(matricule: string) {
     if (await this.depot.exists({ where: { matricule } })) {
       throw new ConflictException(`Un chauffeur avec le matricule « ${matricule} » existe déjà.`);

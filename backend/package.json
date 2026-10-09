@@ -16,7 +16,8 @@
     "migration:run": "npm run typeorm -- migration:run",
     "seed:admin": "ts-node src/database/seeds/creer-admin.ts",
     "db:synchroniser": "ts-node src/database/seeds/synchroniser.ts",
-    "seed:test": "ts-node src/database/seeds/creer-utilisateurs-test.ts"
+    "seed:test": "ts-node src/database/seeds/creer-utilisateurs-test.ts",
+    "seed:chauffeurs": "ts-node src/database/seeds/creer-chauffeurs.ts"
   },
   "dependencies": {
     "@nestjs/common": "^11.0.0",

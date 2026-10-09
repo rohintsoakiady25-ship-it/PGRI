@@ -1,5 +1,6 @@
 /* Styles globaux */
 @import '@fontsource-variable/source-sans-3';
+@import './boutons.css';
 
 /*
  * Couleurs tirées du logo MNP, en deux thèmes.

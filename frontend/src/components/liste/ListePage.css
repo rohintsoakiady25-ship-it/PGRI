@@ -1,3 +1,24 @@
+.liste__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem 1.5rem;
+}
+
+.liste__erreur {
+  color: var(--alert-text);
+}
+
+.liste__ligne--attenuee td {
+  color: var(--ink-soft);
+}
+
+.liste__actions-ligne {
+  text-align: right;
+  white-space: nowrap;
+}
+
 .liste__titre {
   margin: 0;
   font-size: clamp(1.75rem, 3.5vw, 2.125rem);

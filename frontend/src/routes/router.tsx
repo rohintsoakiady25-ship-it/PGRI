@@ -10,6 +10,7 @@ import DemandeFournituresPage from '@/features/fournitures/pages/DemandeFournitu
 import ListeVehiculesPage from '@/features/vehicules-chauffeurs/pages/ListeVehiculesPage';
 import ListeChauffeursPage from '@/features/vehicules-chauffeurs/pages/ListeChauffeursPage';
 import ListeSallesPage from '@/features/salles/pages/ListeSallesPage';
+import PlanningSemainePage from '@/features/salles/pages/PlanningSemainePage';
 import SuiviDemandesSallePage from '@/features/salles/pages/SuiviDemandesSallePage';
 import MesDemandesPage from '@/features/mes-demandes/pages/MesDemandesPage';
 
@@ -39,7 +40,10 @@ export const router = createBrowserRouter([
       },
       {
         element: <RouteReservee autorise={peutGererReferentiels} />,
-        children: [{ path: '/salles/liste', element: <ListeSallesPage /> }],
+        children: [
+          { path: '/salles/liste', element: <ListeSallesPage /> },
+          { path: '/salles/planning', element: <PlanningSemainePage /> },
+        ],
       },
       { path: '/demandes/fournitures', element: <DemandeFournituresPage /> },
     ],

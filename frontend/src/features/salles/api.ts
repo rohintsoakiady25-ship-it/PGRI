@@ -112,6 +112,8 @@ export const demandesSalleApi = {
   disponibilite: (p: { salleId?: string; debut: string; fin: string; nbParticipants?: number }) =>
     api.get<Disponibilite>('/demandes-salle/disponibilite', { params: p }).then((r) => r.data),
   soumettre: (d: DemandeSalleSaisie) => api.post<DetailDemandeSalle>('/demandes-salle', d).then((r) => r.data),
+  /** Réservations d'une période avec leurs détails (logistique, administrateur). */
+  semaine: (du: string, au: string) => api.get<DemandeSalle[]>('/demandes-salle/semaine', { params: { du, au } }).then((r) => r.data),
   mes: () => api.get<DemandeSalle[]>('/demandes-salle/mes').then((r) => r.data),
   aSuivre: () => api.get<DemandeSalle[]>('/demandes-salle').then((r) => r.data),
   detail: (id: string) => api.get<DetailDemandeSalle>(`/demandes-salle/${id}`).then((r) => r.data),

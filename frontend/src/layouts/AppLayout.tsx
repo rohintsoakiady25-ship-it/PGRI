@@ -5,7 +5,7 @@ import { peutGererReferentiels, peutSuivreSalles } from '@/auth/droits';
 import logoMnp from '@/assets/logo-mnp.png';
 import BoutonTheme from '@/theme/BoutonTheme';
 import {
-  IconAccueil, IconChauffeur, IconChevron, IconDeconnexion, IconFournitures, IconMenu, IconMesDemandes, IconNouvelleDemande, IconPanneau,
+  IconAccueil, IconCalendrier, IconChauffeur, IconChevron, IconDeconnexion, IconFournitures, IconMenu, IconMesDemandes, IconNouvelleDemande, IconPanneau,
   IconSalle, IconUtilisateur, IconVehicule,
 } from '@/components/common/icons';
 import './AppLayout.css';
@@ -42,6 +42,7 @@ const menu: { titre: string | null; liens: LienMenu[] }[] = [
         enfants: [
           { to: '/demandes/salle', label: 'Réserver', icone: <IconNouvelleDemande /> },
           { to: '/salles/demandes', label: 'Demandes de salle', icone: <IconMesDemandes />, visible: peutSuivreSalles },
+          { to: '/salles/planning', label: 'Planning de la semaine', icone: <IconCalendrier />, visible: peutGererReferentiels },
           { to: '/salles/liste', label: 'Liste des salles', icone: <IconSalle />, visible: peutGererReferentiels },
         ],
       },

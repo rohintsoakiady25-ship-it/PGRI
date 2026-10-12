@@ -129,6 +129,24 @@ export class DemandesSalleService {
     return liste.map((d) => this.resume(d, acteur));
   }
 
+  /**
+   * Planning de la semaine pour la logistique : réservations en attente, confirmées ou terminées
+   * sur la période, avec leurs détails, de la plus tôt à la plus tard.
+   */
+  async semaine(acteur: Acteur, du: Date, au: Date) {
+    if (!estGestionnaire(acteur)) throw new ForbiddenException('Le planning des salles est réservé à la logistique.');
+    if (au <= du || au.getTime() - du.getTime() > 31 * 24 * 60 * MINUTE) {
+      throw new BadRequestException('Période invalide (un mois au plus).');
+    }
+    await this.cloturerCreneauxPasses();
+    const liste = await this.requete()
+      .where('d.statut IN (:...statuts)', { statuts: [...STATUTS_OCCUPANTS, StatutDemande.TERMINEE] })
+      .andWhere('d.creneauDebut < :au AND d.creneauFin > :du', { du, au })
+      .orderBy('d.creneauDebut', 'ASC')
+      .getMany();
+    return liste.map((d) => this.resume(d, acteur));
+  }
+
   /** Détail : demande, décisions, commentaires et historique des statuts. */
   async detail(acteur: Acteur, id: string) {
     const d = await this.charger(this.source.manager, id);

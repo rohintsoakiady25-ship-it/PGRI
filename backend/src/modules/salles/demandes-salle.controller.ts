@@ -35,6 +35,12 @@ export class DemandesSalleController {
     return this.service.planning(await this.acteur(req), p.du, p.au);
   }
 
+  /** Planning de la semaine (logistique, administrateur). */
+  @Get('semaine')
+  async semaine(@Req() req: RequeteAuth, @Query() p: PeriodeDto) {
+    return this.service.semaine(await this.acteur(req), p.du, p.au);
+  }
+
   @Get('disponibilite')
   disponibilite(@Query() dto: DisponibiliteDto) {
     return this.service.disponibilite(dto);

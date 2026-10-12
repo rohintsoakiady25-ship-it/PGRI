@@ -18,6 +18,13 @@ export const IconVehicule = ({ taille = 20 }: { taille?: number }) => (
   </svg>
 );
 
+export const IconCalendrier = ({ taille = 20 }: { taille?: number }) => (
+  <svg {...base(taille)}>
+    <rect x="4" y="5.5" width="16" height="14.5" rx="1.5" />
+    <path d="M4 10h16M8.5 3.5v4M15.5 3.5v4M8 13.5h2M14 13.5h2M8 16.5h2" />
+  </svg>
+);
+
 export const IconSalle = ({ taille = 20 }: { taille?: number }) => (
   <svg {...base(taille)}>
     <rect x="3.5" y="4" width="17" height="10.5" rx="1.5" />

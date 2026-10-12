@@ -39,7 +39,7 @@ export class AuthService {
     await this.utilisateurs.noterConnexion(u.id);
 
     const payload: JetonPayload = { sub: u.id, login: u.login, source: u.source, roles: u.roles };
-    return { jeton: await this.jwt.signAsync(payload), utilisateur: this.utilisateurs.profil(u) };
+    return { jeton: await this.jwt.signAsync(payload), utilisateur: await this.utilisateurs.profil(u) };
   }
 
   private async viaAnnuaire(identifiant: string, motDePasse: string): Promise<Utilisateur> {

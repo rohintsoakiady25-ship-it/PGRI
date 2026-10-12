@@ -35,12 +35,14 @@ interface ListePageProps {
   total: number;
   /** Bouton à droite du titre (ex. « Ajouter »). */
   action?: ReactNode;
+  /** Message de confirmation affiché sous le titre (ex. demande envoyée). */
+  bandeau?: ReactNode;
 }
 
 /** Gabarit des pages de liste : recherche, filtres, tableau, chargement, erreur, état vide. */
 export default function ListePage({
   titre, intro, placeholderRecherche, recherche, onRecherche, filtres = [], colonnes, lignes, chargement, erreur,
-  messageVide, total, action,
+  messageVide, total, action, bandeau,
 }: ListePageProps) {
   const filtreActif = Boolean(recherche.trim()) || filtres.some((f) => f.valeur);
   let messageCorps: ReactNode = null;
@@ -58,6 +60,11 @@ export default function ListePage({
           </div>
           {action}
         </div>
+        {bandeau && (
+          <p className="liste__bandeau" role="status">
+            {bandeau}
+          </p>
+        )}
 
         <div className="liste__outils" role="search">
           <label className="liste__recherche">

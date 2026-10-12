@@ -5,9 +5,9 @@ import Modale from '@/components/common/Modale';
 import { useAuth } from '@/auth/AuthContext';
 import { peutGererReferentiels } from '@/auth/droits';
 import { LIBELLE_DISPONIBILITE, LIBELLE_ETAT, vehiculesApi, type Disponibilite, type EtatTechnique, type Vehicule } from '../api';
-import { normaliser, useListe } from '../useListe';
+import { normaliser, useListe } from '@/hooks/useListe';
 import FormulaireVehicule from '../components/FormulaireVehicule';
-import ConfirmerSuppression from '../components/ConfirmerSuppression';
+import ConfirmerSuppression from '@/components/common/ConfirmerSuppression';
 
 const TON_ETAT: Record<EtatTechnique, TonBadge> = { BON: 'succes', A_SURVEILLER: 'attention', EN_REPARATION: 'danger' };
 const TON_DISPO: Record<Disponibilite, TonBadge> = { DISPONIBLE: 'succes', INDISPONIBLE: 'attention', HORS_SERVICE: 'neutre' };

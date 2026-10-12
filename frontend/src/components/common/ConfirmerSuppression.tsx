@@ -8,7 +8,7 @@ interface Props {
   onAnnuler: () => void;
 }
 
-/** Confirmation avant une suppression définitive (logistique, administrateur). */
+/** Confirmation avant une suppression définitive. */
 export default function ConfirmerSuppression({ nom, supprimer, onSupprime, onAnnuler }: Props) {
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
@@ -33,8 +33,8 @@ export default function ConfirmerSuppression({ nom, supprimer, onSupprime, onAnn
         </p>
       )}
       <p className="formulaire__champ--large">
-        <strong>{nom}</strong> sera supprimé définitivement. Pour le retirer seulement des affectations, utilisez plutôt
-        « Modifier » puis décochez « En service ».
+        <strong>{nom}</strong> sera supprimé définitivement. Pour seulement ne plus le proposer, utilisez plutôt « Modifier » puis
+        décochez « En service ».
       </p>
       <div className="formulaire__actions">
         <button type="button" className="btn btn--secondary" onClick={onAnnuler} autoFocus>

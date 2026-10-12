@@ -23,22 +23,35 @@ interface CompteTest {
   roles: Role[];
   actif: boolean;
   role_teste: string;
+  /** Login du supérieur direct (N+1), facultatif. */
+  superieur?: string;
 }
 
 const FICHIER = join(__dirname, 'utilisateurs-test.local.json');
 const mdp = () => randomBytes(9).toString('base64url'); // 12 caractères
 
 const MODELES: Omit<CompteTest, 'motDePasse'>[] = [
-  { login: 'agent.test', nomComplet: 'Agent Test', direction: 'DOPE', service: 'Suivi écologique', roles: [Role.DEMANDEUR], actif: true, role_teste: 'Demandeur simple' },
+  { login: 'agent.test', nomComplet: 'Agent Test', direction: 'DOPE', service: 'Suivi écologique', roles: [Role.DEMANDEUR], actif: true, role_teste: 'Demandeur simple (N+1 : chef.test)', superieur: 'chef.test' },
+  { login: 'chef.test', nomComplet: 'Chef de Service Test', direction: 'DOPE', service: 'Suivi écologique', roles: [Role.DEMANDEUR], actif: true, role_teste: 'Supérieur direct (N+1) de agent.test' },
   { login: 'logistique.test', nomComplet: 'Responsable Logistique Test', direction: 'DAF', service: 'Logistique', roles: [Role.DEMANDEUR, Role.LOGISTIQUE], actif: true, role_teste: 'Responsable logistique' },
   { login: 'magasinier.test', nomComplet: 'Magasinier Test', direction: 'DAF', service: 'Magasin', roles: [Role.DEMANDEUR, Role.MAGASINIER], actif: true, role_teste: 'Magasinier' },
-  { login: 'assistante.test', nomComplet: 'Assistante Direction Test', direction: 'DG', service: 'Secrétariat DG', roles: [Role.DEMANDEUR, Role.ASSISTANTE_DIRECTION], actif: true, role_teste: 'Assistante de direction' },
+  { login: 'assistante.test', nomComplet: 'Assistante Direction Test', direction: 'DOPE', service: 'Secrétariat DOPE', roles: [Role.DEMANDEUR, Role.ASSISTANTE_DIRECTION], actif: true, role_teste: 'Assistante de direction (DOPE : voit les demandes de agent.test)' },
   { login: 'admin.test', nomComplet: 'Administrateur Test', direction: 'DSII', service: 'Informatique', roles: [Role.DEMANDEUR, Role.ADMIN], actif: true, role_teste: 'Administrateur' },
   { login: 'desactive.test', nomComplet: 'Compte Désactivé Test', direction: 'DOPE', service: 'Suivi écologique', roles: [Role.DEMANDEUR], actif: false, role_teste: 'Compte désactivé : la connexion doit être refusée' },
 ];
 
 function chargerComptes(): CompteTest[] {
-  if (existsSync(FICHIER)) return JSON.parse(readFileSync(FICHIER, 'utf8')).comptes;
+  if (existsSync(FICHIER)) {
+    // Fichier existant : on garde ses valeurs et on y ajoute les comptes de test apparus depuis
+    const contenu = JSON.parse(readFileSync(FICHIER, 'utf8'));
+    const connus = new Set(contenu.comptes.map((c: CompteTest) => c.login));
+    const nouveaux = MODELES.filter((m) => !connus.has(m.login)).map((m) => ({ ...m, motDePasse: mdp() }));
+    if (nouveaux.length) {
+      contenu.comptes.push(...nouveaux);
+      writeFileSync(FICHIER, JSON.stringify(contenu, null, 2));
+    }
+    return contenu.comptes;
+  }
   const comptes = MODELES.map((m) => ({ ...m, motDePasse: mdp() }));
   writeFileSync(
     FICHIER,
@@ -72,6 +85,11 @@ async function main() {
     u.actif = c.actif;
     await depot.save(u);
     console.log(`  ${existant ? '~' : '+'} ${login} — ${c.role_teste}${existant ? ' (mis à jour)' : ''}`);
+  }
+  // Liens N+1, une fois tous les comptes créés
+  for (const c of comptes) {
+    const superieur = c.superieur ? await depot.findOne({ where: { login: c.superieur.toLowerCase(), source: SourceCompte.LOCAL } }) : null;
+    await depot.update({ login: c.login.toLowerCase(), source: SourceCompte.LOCAL }, { superieurDirectId: superieur?.id ?? null });
   }
   await source.destroy();
   console.log(`Identifiants et mots de passe : ${FICHIER}`);

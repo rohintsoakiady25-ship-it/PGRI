@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, type Utilisateur } from '@/auth/AuthContext';
-import { peutGererReferentiels } from '@/auth/droits';
+import { peutGererReferentiels, peutSuivreSalles } from '@/auth/droits';
 import logoMnp from '@/assets/logo-mnp.png';
 import BoutonTheme from '@/theme/BoutonTheme';
 import {
@@ -35,7 +35,16 @@ const menu: { titre: string | null; liens: LienMenu[] }[] = [
           { to: '/deplacements/chauffeurs', label: 'Liste des chauffeurs', icone: <IconChauffeur />, visible: peutGererReferentiels },
         ],
       },
-      { to: '/demandes/salle', label: 'Salle de réunion', icone: <IconSalle /> },
+      {
+        to: '/demandes/salle',
+        label: 'Salle de réunion',
+        icone: <IconSalle />,
+        enfants: [
+          { to: '/demandes/salle', label: 'Réserver', icone: <IconNouvelleDemande /> },
+          { to: '/salles/demandes', label: 'Demandes de salle', icone: <IconMesDemandes />, visible: peutSuivreSalles },
+          { to: '/salles/liste', label: 'Liste des salles', icone: <IconSalle />, visible: peutGererReferentiels },
+        ],
+      },
       { to: '/demandes/fournitures', label: 'Fournitures', icone: <IconFournitures /> },
     ],
   },

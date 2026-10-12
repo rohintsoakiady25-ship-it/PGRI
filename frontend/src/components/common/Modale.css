@@ -9,6 +9,10 @@
   box-shadow: 0 24px 48px -12px rgb(var(--shadow-rgb) / 0.35);
 }
 
+.modale--large {
+  width: min(760px, calc(100vw - 2rem));
+}
+
 .modale::backdrop {
   background: var(--overlay);
 }

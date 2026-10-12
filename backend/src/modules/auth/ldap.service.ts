@@ -20,7 +20,7 @@ interface ConfigLdap {
   groupes: Record<string, string>;
 }
 
-const ATTRIBUTS = ['sAMAccountName', 'displayName', 'cn', 'mail', 'department', 'company', 'physicalDeliveryOfficeName', 'memberOf'];
+const ATTRIBUTS = ['sAMAccountName', 'displayName', 'cn', 'mail', 'department', 'company', 'physicalDeliveryOfficeName', 'memberOf', 'manager'];
 
 const premier = (v: unknown): string | null => {
   const x = Array.isArray(v) ? v[0] : v;
@@ -182,6 +182,8 @@ export class LdapService {
       email: premier(entree.mail),
       direction: premier(entree.company) ?? premier(entree.physicalDeliveryOfficeName),
       service: premier(entree.department),
+      dn: String(entree.dn),
+      managerDn: premier(entree.manager),
       roles,
     };
   }

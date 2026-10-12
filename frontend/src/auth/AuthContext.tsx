@@ -12,6 +12,8 @@ export interface Utilisateur {
   direction: string | null;
   service: string | null;
   roles: string[];
+  /** A des collaborateurs directs (N+1) : suit et commente leurs demandes de salle. */
+  estSuperieur: boolean;
 }
 
 interface ContexteAuth {

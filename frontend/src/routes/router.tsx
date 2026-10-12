@@ -1,7 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import RouteProtegee from '@/auth/RouteProtegee';
 import RouteReservee from '@/auth/RouteReservee';
-import { peutGererReferentiels } from '@/auth/droits';
+import { peutGererReferentiels, peutSuivreSalles } from '@/auth/droits';
 import LoginPage from '@/features/auth/pages/LoginPage';
 import AccueilPage from '@/features/accueil/pages/AccueilPage';
 import DemandeDeplacementPage from '@/features/deplacements/pages/DemandeDeplacementPage';
@@ -9,7 +9,9 @@ import DemandeSallePage from '@/features/salles/pages/DemandeSallePage';
 import DemandeFournituresPage from '@/features/fournitures/pages/DemandeFournituresPage';
 import ListeVehiculesPage from '@/features/vehicules-chauffeurs/pages/ListeVehiculesPage';
 import ListeChauffeursPage from '@/features/vehicules-chauffeurs/pages/ListeChauffeursPage';
-import PagePlaceholder from '@/components/common/PagePlaceholder';
+import ListeSallesPage from '@/features/salles/pages/ListeSallesPage';
+import SuiviDemandesSallePage from '@/features/salles/pages/SuiviDemandesSallePage';
+import MesDemandesPage from '@/features/mes-demandes/pages/MesDemandesPage';
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -19,10 +21,7 @@ export const router = createBrowserRouter([
     children: [
       { path: '/', element: <Navigate to="/accueil" replace /> },
       { path: '/accueil', element: <AccueilPage /> },
-      {
-        path: '/mes-demandes',
-        element: <PagePlaceholder titre="Mes demandes en cours" description="La liste de vos demandes et de leur statut sera développée ici." />,
-      },
+      { path: '/mes-demandes', element: <MesDemandesPage /> },
       { path: '/demandes/deplacement', element: <DemandeDeplacementPage /> },
       {
         // Listes des voitures et des chauffeurs : logistique et administrateur seulement
@@ -33,6 +32,15 @@ export const router = createBrowserRouter([
         ],
       },
       { path: '/demandes/salle', element: <DemandeSallePage /> },
+      {
+        // Suivi des demandes de salle : logistique, N+1, assistante de direction
+        element: <RouteReservee autorise={peutSuivreSalles} />,
+        children: [{ path: '/salles/demandes', element: <SuiviDemandesSallePage /> }],
+      },
+      {
+        element: <RouteReservee autorise={peutGererReferentiels} />,
+        children: [{ path: '/salles/liste', element: <ListeSallesPage /> }],
+      },
       { path: '/demandes/fournitures', element: <DemandeFournituresPage /> },
     ],
   },

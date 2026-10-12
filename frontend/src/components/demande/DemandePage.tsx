@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import type { FormEvent, ReactNode } from 'react';
 import AppLayout from '@/layouts/AppLayout';
 import './DemandePage.css';
 
@@ -12,11 +12,19 @@ interface DemandePageProps {
   intro: string;
   circuit: EtapeCircuit[];
   noteCircuit?: string;
+  /** Soumission réelle ; sans elle, la page reste une maquette. */
+  onSoumettre?: (e: FormEvent<HTMLFormElement>) => void;
+  envoi?: boolean;
+  erreur?: string | null;
+  /** Bouton « Enregistrer le brouillon » (pas encore branché). */
+  brouillon?: boolean;
   children: ReactNode;
 }
 
 /** Gabarit commun des pages de demande : formulaire à gauche, circuit de validation à droite. */
-export default function DemandePage({ titre, intro, circuit, noteCircuit, children }: DemandePageProps) {
+export default function DemandePage({
+  titre, intro, circuit, noteCircuit, onSoumettre, envoi, erreur, brouillon = true, children,
+}: DemandePageProps) {
   return (
     <AppLayout>
       <div className="demande">
@@ -24,14 +32,21 @@ export default function DemandePage({ titre, intro, circuit, noteCircuit, childr
         <p className="demande__intro">{intro}</p>
 
         <div className="demande__grid">
-          <form className="demande__form" noValidate>
+          <form className="demande__form" noValidate onSubmit={onSoumettre ?? ((e) => e.preventDefault())}>
             {children}
+            {erreur && (
+              <p className="demande__erreur" role="alert">
+                {erreur}
+              </p>
+            )}
             <div className="demande__actions">
-              <button type="button" className="btn btn--secondary">
-                Enregistrer le brouillon
-              </button>
-              <button type="submit" className="btn btn--primary">
-                Soumettre la demande
+              {brouillon && (
+                <button type="button" className="btn btn--secondary">
+                  Enregistrer le brouillon
+                </button>
+              )}
+              <button type="submit" className="btn btn--primary" disabled={envoi}>
+                {envoi ? 'Envoi…' : 'Soumettre la demande'}
               </button>
             </div>
           </form>

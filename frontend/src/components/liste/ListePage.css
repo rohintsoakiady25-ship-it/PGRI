@@ -14,10 +14,29 @@
   color: var(--ink-soft);
 }
 
+.liste__bandeau {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, #2e8b57 10%, var(--surface));
+  color: #1f6b41;
+  font-size: 0.9375rem;
+}
+
+:root[data-theme='dark'] .liste__bandeau {
+  color: #7fd39b;
+}
+
+.liste__discret {
+  color: var(--ink-soft);
+  font-size: 0.8125rem;
+}
+
 .liste__actions-ligne {
   text-align: right;
   white-space: nowrap;
   display: flex;
+  align-items: center;
   justify-content: flex-end;
   gap: 0.5rem;
 }

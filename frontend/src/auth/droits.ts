@@ -7,3 +7,7 @@ export function aUnRole(utilisateur: Utilisateur | null, ...roles: string[]): bo
 
 /** Listes des voitures et des chauffeurs (consultation et gestion) : logistique et administrateur. */
 export const peutGererReferentiels = (u: Utilisateur | null) => aUnRole(u, 'LOGISTIQUE', 'ADMIN');
+
+/** Suivi des demandes de salle des autres : logistique (validation), N+1 et assistante de direction (avis). */
+export const peutSuivreSalles = (u: Utilisateur | null) =>
+  aUnRole(u, 'LOGISTIQUE', 'ADMIN', 'ASSISTANTE_DIRECTION') || Boolean(u?.estSuperieur);

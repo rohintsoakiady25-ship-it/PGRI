@@ -5,11 +5,13 @@ interface ModaleProps {
   ouverte: boolean;
   titre: string;
   onFermer: () => void;
+  /** Fenêtre plus large (détail d'une demande). */
+  large?: boolean;
   children: ReactNode;
 }
 
 /** Fenêtre modale (élément <dialog> natif : focus piégé, Échap pour fermer). */
-export default function Modale({ ouverte, titre, onFermer, children }: ModaleProps) {
+export default function Modale({ ouverte, titre, onFermer, large, children }: ModaleProps) {
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -22,7 +24,7 @@ export default function Modale({ ouverte, titre, onFermer, children }: ModalePro
   return (
     <dialog
       ref={ref}
-      className="modale"
+      className={`modale${large ? ' modale--large' : ''}`}
       aria-labelledby="modale-titre"
       onCancel={(e) => {
         e.preventDefault();

@@ -1,4 +1,4 @@
-import { Check, Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
+import { Check, Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn, Unique, UpdateDateColumn } from 'typeorm';
 import { Role } from '../../../common/enums/role.enum';
 import { SourceCompte } from '../../../common/enums/source-compte.enum';
 
@@ -38,6 +38,25 @@ export class Utilisateur {
 
   @Column({ type: 'varchar', length: 100, nullable: true })
   service!: string | null;
+
+  /**
+   * Supérieur direct (N+1) : le N+1 n'est pas un rôle, il se déduit de ce lien (Figure 3).
+   * Compte AD : synchronisé depuis l'attribut « manager » ; compte local : défini par l'administrateur.
+   */
+  @ManyToOne(() => Utilisateur, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'superieur_direct_id' })
+  superieurDirect!: Utilisateur | null;
+
+  @Column({ name: 'superieur_direct_id', type: 'uuid', nullable: true })
+  superieurDirectId!: string | null;
+
+  /** DN dans l'annuaire (comptes AD) : sert à relier les agents à leur N+1. */
+  @Column({ name: 'dn_ad', type: 'varchar', length: 500, nullable: true })
+  dnAd!: string | null;
+
+  /** DN du supérieur (attribut « manager » de l'AD). */
+  @Column({ name: 'manager_dn', type: 'varchar', length: 500, nullable: true })
+  managerDn!: string | null;
 
   @Column({ type: 'simple-array', default: Role.DEMANDEUR })
   roles!: Role[];

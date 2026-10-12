@@ -29,7 +29,11 @@ CREATE TABLE IF NOT EXISTS utilisateur (
     derniere_connexion  timestamp with time zone,
     cree_le             timestamp with time zone NOT NULL DEFAULT now(),
     modifie_le          timestamp with time zone NOT NULL DEFAULT now(),
+    superieur_direct_id uuid,                                          -- N+1 (lien, pas un rôle)
+    dn_ad               varchar(500),                                  -- DN dans l'annuaire (comptes AD)
+    manager_dn          varchar(500),                                  -- DN du N+1 (attribut « manager »)
     CONSTRAINT pk_utilisateur PRIMARY KEY (id),
+    CONSTRAINT fk_utilisateur_superieur FOREIGN KEY (superieur_direct_id) REFERENCES utilisateur (id) ON DELETE SET NULL,
     CONSTRAINT uq_utilisateur_login_source UNIQUE (login, source),
     CONSTRAINT ck_utilisateur_source CHECK (source IN ('AD', 'LOCAL')),
     CONSTRAINT ck_utilisateur_mot_de_passe CHECK (source = 'AD' OR mot_de_passe_hash IS NOT NULL)
@@ -82,6 +86,98 @@ CREATE TABLE IF NOT EXISTS chauffeur (
 );
 
 COMMENT ON TABLE chauffeur IS 'Chauffeurs affectables aux missions par le responsable logistique';
+
+-- ---------------------------------------------------------------------
+-- Salles de réunion (Ressource > Salle, héritage « tables concrètes »)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS salle (
+    id                  uuid                     NOT NULL DEFAULT uuid_generate_v4(),
+    nom                 varchar(150)             NOT NULL,             -- ex. « Salle 1 »
+    actif               boolean                  NOT NULL DEFAULT true,
+    cree_le             timestamp with time zone NOT NULL DEFAULT now(),
+    modifie_le          timestamp with time zone NOT NULL DEFAULT now(),
+    capacite            smallint                 NOT NULL,
+    equipements         text                     NOT NULL DEFAULT '',  -- liste séparée par des virgules
+    localisation        varchar(150),
+    CONSTRAINT pk_salle PRIMARY KEY (id),
+    CONSTRAINT uq_salle_nom UNIQUE (nom),
+    CONSTRAINT ck_salle_capacite CHECK (capacite BETWEEN 1 AND 500)
+);
+
+COMMENT ON TABLE salle IS 'Salles de réunion réservables (Salle 1, Salle 2…)';
+
+-- ---------------------------------------------------------------------
+-- Demandes (Demande > DemandeSalle, DemandeDeplacement, DemandeFourniture)
+-- Héritage « table unique » : une seule table, la colonne « type » indique
+-- le sous-type ; les colonnes propres à un sous-type sont facultatives.
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS demande (
+    id                  uuid                     NOT NULL DEFAULT uuid_generate_v4(),
+    reference           varchar(20)              NOT NULL,             -- ex. SAL-2026-0001
+    type                varchar(20)              NOT NULL,             -- DEPLACEMENT, SALLE ou FOURNITURE
+    statut              varchar(30)              NOT NULL DEFAULT 'BROUILLON',
+    demandeur_id        uuid                     NOT NULL,
+    cree_le             timestamp with time zone NOT NULL DEFAULT now(),
+    soumis_le           timestamp with time zone,
+    modifie_le          timestamp with time zone NOT NULL DEFAULT now(),
+    -- DemandeSalle (section 4.1.3)
+    salle_id            uuid,
+    creneau_debut       timestamp with time zone,
+    creneau_fin         timestamp with time zone,
+    objet               varchar(200),
+    nb_participants     smallint,
+    equipements_souhaites text,                                        -- liste séparée par des virgules
+    participants        text,
+    CONSTRAINT pk_demande PRIMARY KEY (id),
+    CONSTRAINT uq_demande_reference UNIQUE (reference),
+    CONSTRAINT fk_demande_demandeur FOREIGN KEY (demandeur_id) REFERENCES utilisateur (id),
+    CONSTRAINT fk_demande_salle FOREIGN KEY (salle_id) REFERENCES salle (id)
+);
+
+CREATE INDEX IF NOT EXISTS ix_demande_type ON demande (type);
+
+COMMENT ON TABLE  demande        IS 'Demandes des trois modules (héritage table unique)';
+COMMENT ON COLUMN demande.statut IS 'Voir Figure 7 : EN_ATTENTE_LOGISTIQUE, CONFIRMEE, REFUSEE, ANNULEE, LIBEREE, TERMINEE…';
+
+-- Décisions des validateurs (niveau N1 ou LOGISTIQUE)
+CREATE TABLE IF NOT EXISTS validation (
+    id                  uuid                     NOT NULL DEFAULT uuid_generate_v4(),
+    demande_id          uuid                     NOT NULL,
+    niveau              varchar(20)              NOT NULL,             -- N1 ou LOGISTIQUE
+    decision            varchar(20)              NOT NULL,             -- VALIDEE ou REFUSEE
+    validateur_id       uuid                     NOT NULL,
+    commentaire         text,
+    decide_le           timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT pk_validation PRIMARY KEY (id),
+    CONSTRAINT fk_validation_demande FOREIGN KEY (demande_id) REFERENCES demande (id) ON DELETE CASCADE,
+    CONSTRAINT fk_validation_validateur FOREIGN KEY (validateur_id) REFERENCES utilisateur (id)
+);
+
+-- Avis sans effet sur le statut (N+1, assistante de direction…)
+CREATE TABLE IF NOT EXISTS commentaire (
+    id                  uuid                     NOT NULL DEFAULT uuid_generate_v4(),
+    demande_id          uuid                     NOT NULL,
+    auteur_id           uuid                     NOT NULL,
+    texte               text                     NOT NULL,
+    cree_le             timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT pk_commentaire PRIMARY KEY (id),
+    CONSTRAINT fk_commentaire_demande FOREIGN KEY (demande_id) REFERENCES demande (id) ON DELETE CASCADE,
+    CONSTRAINT fk_commentaire_auteur FOREIGN KEY (auteur_id) REFERENCES utilisateur (id)
+);
+
+-- Trace de chaque changement de statut (auteur vide : transition automatique)
+CREATE TABLE IF NOT EXISTS historique_statut (
+    id                  uuid                     NOT NULL DEFAULT uuid_generate_v4(),
+    demande_id          uuid                     NOT NULL,
+    ancien_statut       varchar(30),
+    nouveau_statut      varchar(30)              NOT NULL,
+    auteur_id           uuid,
+    commentaire         text,
+    date                timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT pk_historique_statut PRIMARY KEY (id),
+    CONSTRAINT fk_historique_demande FOREIGN KEY (demande_id) REFERENCES demande (id) ON DELETE CASCADE,
+    CONSTRAINT fk_historique_auteur FOREIGN KEY (auteur_id) REFERENCES utilisateur (id)
+);
 
 -- Le premier compte local administrateur se crée avec le backend (mot de passe chiffré) :
 --   npm run seed:admin

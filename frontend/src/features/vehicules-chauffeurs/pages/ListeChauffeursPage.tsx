@@ -5,9 +5,9 @@ import Modale from '@/components/common/Modale';
 import { useAuth } from '@/auth/AuthContext';
 import { peutGererReferentiels } from '@/auth/droits';
 import { chauffeursApi, LIBELLE_DISPONIBILITE, type Chauffeur, type Disponibilite } from '../api';
-import { normaliser, useListe } from '../useListe';
+import { normaliser, useListe } from '@/hooks/useListe';
 import FormulaireChauffeur from '../components/FormulaireChauffeur';
-import ConfirmerSuppression from '../components/ConfirmerSuppression';
+import ConfirmerSuppression from '@/components/common/ConfirmerSuppression';
 
 const TON_DISPO: Record<Disponibilite, TonBadge> = { DISPONIBLE: 'succes', INDISPONIBLE: 'attention', HORS_SERVICE: 'neutre' };
 

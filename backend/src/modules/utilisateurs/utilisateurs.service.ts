@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Raw, Repository } from 'typeorm';
 import * as bcrypt from 'bcryptjs';
 import { Role } from '../../common/enums/role.enum';
 import { SourceCompte } from '../../common/enums/source-compte.enum';
@@ -13,6 +13,9 @@ export interface ProfilAnnuaire {
   email: string | null;
   direction: string | null;
   service: string | null;
+  /** DN de l'utilisateur et de son supérieur (attribut « manager »). */
+  dn: string;
+  managerDn: string | null;
   roles: Role[];
 }
 
@@ -26,9 +29,14 @@ export interface ProfilUtilisateur {
   direction: string | null;
   service: string | null;
   roles: Role[];
+  /** A au moins un collaborateur direct : voit et commente leurs demandes de salle. */
+  estSuperieur: boolean;
 }
 
 const COUT_BCRYPT = 12;
+
+/** Égalité de DN sans tenir compte de la casse (l'AD ne la respecte pas). */
+const memeDn = (dn: string) => Raw((col) => `lower(${col}) = lower(:dn)`, { dn });
 
 @Injectable()
 export class UtilisateursService {
@@ -57,7 +65,16 @@ export class UtilisateursService {
     u.direction = profil.direction;
     u.service = profil.service;
     u.roles = profil.roles.length ? profil.roles : [Role.DEMANDEUR];
-    return this.depot.save(u);
+    u.dnAd = profil.dn;
+    u.managerDn = profil.managerDn;
+    // Lien vers le N+1 s'il s'est déjà connecté (sinon, établi à sa première connexion, ci-dessous)
+    u.superieurDirectId = profil.managerDn
+      ? ((await this.depot.findOne({ where: { dnAd: memeDn(profil.managerDn), source: SourceCompte.AD } }))?.id ?? null)
+      : null;
+    const enregistre = await this.depot.save(u);
+    // Collaborateurs déjà connus dont ce compte est le « manager »
+    await this.depot.update({ managerDn: memeDn(profil.dn), source: SourceCompte.AD }, { superieurDirectId: enregistre.id });
+    return enregistre;
   }
 
   /** Crée un compte local (mot de passe chiffré avec bcrypt). */
@@ -88,7 +105,7 @@ export class UtilisateursService {
     await this.depot.update({ id }, { derniereConnexion: new Date() });
   }
 
-  profil(u: Utilisateur): ProfilUtilisateur {
+  async profil(u: Utilisateur): Promise<ProfilUtilisateur> {
     return {
       id: u.id,
       login: u.login,
@@ -98,6 +115,7 @@ export class UtilisateursService {
       direction: u.direction,
       service: u.service,
       roles: u.roles,
+      estSuperieur: await this.depot.exists({ where: { superieurDirectId: u.id, actif: true } }),
     };
   }
 }

@@ -96,3 +96,10 @@
   background: color-mix(in srgb, var(--alert-text) 10%, var(--surface));
   color: var(--alert-text);
 }
+
+/* Petit bouton mis en avant (action à faire, ex. « Examiner ») */
+.btn--petit-accent {
+  border-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}

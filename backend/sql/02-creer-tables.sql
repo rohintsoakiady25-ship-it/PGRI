@@ -181,3 +181,13 @@ CREATE TABLE IF NOT EXISTS historique_statut (
 
 -- Le premier compte local administrateur se crée avec le backend (mot de passe chiffré) :
 --   npm run seed:admin
+
+-- ---------------------------------------------------------------------
+-- Réglages clé / valeur (ex. jeton du lien public du planning des salles)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS parametre (
+    cle                 varchar(100)             NOT NULL,
+    valeur              text                     NOT NULL,
+    modifie_le          timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT pk_parametre PRIMARY KEY (cle)
+);

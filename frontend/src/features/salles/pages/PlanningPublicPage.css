@@ -1,0 +1,98 @@
+/* Planning public (lien / QR code) : page autonome, sans menu */
+.public {
+  min-height: 100dvh;
+  background: var(--surface);
+  color: var(--ink);
+}
+
+.public__bandeau {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.75rem clamp(1rem, 3vw, 2rem);
+  border-bottom: 1px solid var(--line);
+  background: var(--cream);
+}
+
+.public__logo {
+  width: 2.75rem;
+  height: auto;
+}
+
+.public__marque {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.public__marque strong {
+  font-size: 1.0625rem;
+}
+
+.public__marque span {
+  color: var(--ink-soft);
+  font-size: 0.8125rem;
+}
+
+.public__contenu {
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.public__entete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem 1.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.public__entete > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+
+.public__titre {
+  margin: 0;
+  font-size: clamp(1.375rem, 3vw, 1.75rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.public__intro {
+  margin: 0.25rem 0 0;
+  color: var(--ink-soft);
+}
+
+.public__erreur {
+  margin: 0 0 1rem;
+  color: var(--alert-text);
+}
+
+.public__maj {
+  margin: 0.5rem 0 0;
+  color: var(--ink-soft);
+  font-size: 0.8125rem;
+}
+
+.public__invalide {
+  max-width: 32rem;
+  margin: 15vh auto 0;
+  text-align: center;
+}
+
+.public__invalide h1 {
+  margin: 0 0 0.5rem;
+  font-size: 1.5rem;
+}
+
+.public__invalide p {
+  margin: 0;
+  color: var(--ink-soft);
+}
+
+@media (max-width: 860px) {
+  .public__entete {
+    flex-wrap: wrap;
+  }
+}

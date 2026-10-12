@@ -1,0 +1,231 @@
+/* Grille de la semaine : lundi – vendredi, une colonne par salle, une ligne par heure (8 h – 18 h) */
+.grille-cadre {
+  overflow-x: auto;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.grille-cadre[aria-busy='true'] {
+  opacity: 0.6;
+}
+
+/* ---------- Grille horaire ---------- */
+.grille {
+  --quart: 0.9rem; /* hauteur d'un quart d'heure : une heure = 4 quarts */
+  display: grid;
+  grid-template-columns: 3.25rem repeat(var(--nb-colonnes), minmax(0, 1fr));
+  grid-template-rows: auto auto repeat(var(--nb-quarts), var(--quart)) 1.25rem;
+  /* Colonnes égales ; défilement horizontal seulement si une salle aurait moins de 5,5 rem */
+  min-width: calc(3.25rem + var(--nb-colonnes) * 5.5rem);
+}
+
+.grille__coin,
+.grille__jour,
+.grille__salle {
+  background: var(--cream);
+}
+
+.grille__jour {
+  overflow: hidden;
+  padding: 0.625rem 0.5rem 0.25rem;
+  text-overflow: ellipsis;
+  border-left: 2px solid var(--line-strong);
+  color: var(--ink);
+  font-size: 0.875rem;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.grille__jour--aujourdhui {
+  color: var(--accent-text);
+}
+
+.grille__pastille {
+  display: inline-block;
+  margin-left: 0.375rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  vertical-align: 0.0625rem;
+}
+
+.grille__salle {
+  overflow: hidden;
+  padding: 0 0.5rem 0.5rem;
+  border-bottom: 1px solid var(--line-strong);
+  border-left: 1px solid var(--line);
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.grille__coin {
+  border-bottom: 1px solid var(--line-strong);
+}
+
+/* Libellés des heures, alignés sur le trait du début de l'heure */
+.grille__heure {
+  padding-right: 0.5rem;
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  transform: translateY(-0.55em);
+}
+
+.grille__heure--premiere {
+  transform: none;
+}
+
+.grille__heure--fin {
+  align-self: start;
+}
+
+.grille__case {
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
+}
+
+/* Séparation plus marquée entre deux jours */
+.grille__debut-jour {
+  border-left: 2px solid var(--line-strong);
+}
+
+.grille__case--aujourdhui {
+  background: color-mix(in srgb, var(--accent) 5%, transparent);
+}
+
+/* ---------- Réservation ---------- */
+.resa {
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.0625rem;
+  min-width: 0;
+  margin: 1px 3px;
+  padding: 0.25rem 0.375rem;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-left-width: 4px;
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-align: left;
+}
+
+.resa--cliquable {
+  cursor: pointer;
+}
+
+.resa--cliquable:hover {
+  border-color: var(--line-strong);
+  box-shadow: 0 4px 12px -6px rgb(var(--shadow-rgb) / 0.4);
+}
+
+.resa:focus-visible {
+  z-index: 2;
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.resa--confirmee {
+  border-left-color: var(--ink);
+}
+
+.resa--attente {
+  border-left-color: var(--mnp-yellow);
+  background: color-mix(in srgb, var(--mnp-yellow) 14%, var(--surface));
+}
+
+.resa--terminee {
+  border-left-color: var(--line-strong);
+  color: var(--ink-soft);
+}
+
+/* Créneau de 45 min ou moins : une seule ligne */
+.resa--court {
+  flex-direction: row;
+  align-items: center;
+  gap: 0.375rem;
+  padding-block: 0;
+}
+
+.resa__heure {
+  flex-shrink: 0;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.resa__objet,
+.resa__qui {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.resa__objet {
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.resa__qui {
+  color: var(--ink-soft);
+  font-size: 0.6875rem;
+}
+
+/* ---------- Légende ---------- */
+.grille-legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  list-style: none;
+  color: var(--ink-soft);
+  font-size: 0.8125rem;
+}
+
+.grille-legende li {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.resa-puce {
+  width: 0.875rem;
+  height: 0.875rem;
+  border-radius: 3px;
+}
+
+.resa-puce--confirmee {
+  background: var(--ink);
+}
+
+.resa-puce--attente {
+  background: var(--mnp-yellow);
+}
+
+.resa-puce--terminee {
+  background: var(--line-strong);
+}
+
+/* Colonne des heures figée à gauche quand la grille défile (téléphone) */
+.grille__coin,
+.grille__heure {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+}
+
+.grille__heure {
+  background: var(--surface);
+  box-shadow: 1px 0 0 var(--line);
+}

@@ -124,6 +124,30 @@ export const demandesSalleApi = {
     api.post<DetailDemandeSalle>(`/demandes-salle/${id}/commentaires`, { texte }).then((r) => r.data),
 };
 
+// ---------------------------------------------------------------- planning public (QR code)
+
+export interface PlanningPublic {
+  salles: { id: string; nom: string; capacite: number; actif: boolean }[];
+  reservations: { id: string; salleId: string; debut: string; fin: string; statut: StatutSalle; objet: string }[];
+}
+
+/** Lien public : jeton secret géré par la logistique. */
+export const lienPublicApi = {
+  lire: () => api.get<{ jeton: string; modifieLe: string }>('/planning-salles/lien-public').then((r) => r.data),
+  regenerer: () => api.post<{ jeton: string; modifieLe: string }>('/planning-salles/lien-public/regeneration').then((r) => r.data),
+};
+
+/** Planning en lecture seule, sans connexion. */
+export const planningPublicApi = (jeton: string, du: string, au: string) =>
+  api.get<PlanningPublic>(`/public/planning-salles/${encodeURIComponent(jeton)}`, { params: { du, au } }).then((r) => r.data);
+
+/**
+ * Adresse publique du planning. En développement, `localhost` n'est pas joignable depuis un téléphone :
+ * définir VITE_URL_PUBLIQUE (ex. http://192.168.0.20:5173) pour que le QR code pointe vers le bon serveur.
+ */
+export const urlPlanningPublic = (jeton: string) =>
+  `${(import.meta.env.VITE_URL_PUBLIQUE ?? window.location.origin).replace(/\/$/, '')}/planning/${jeton}`;
+
 // ---------------------------------------------------------------- dates (heure locale du navigateur)
 
 const fmtJour = new Intl.DateTimeFormat('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' });

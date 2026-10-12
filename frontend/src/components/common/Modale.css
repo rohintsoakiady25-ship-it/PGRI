@@ -1,6 +1,7 @@
 .modale {
   width: min(560px, calc(100vw - 2rem));
   max-height: calc(100dvh - 2rem);
+  overflow-x: hidden; /* défilement vertical seulement */
   padding: 0;
   border: 1px solid var(--line);
   border-radius: 14px;

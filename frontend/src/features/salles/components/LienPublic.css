@@ -1,0 +1,93 @@
+.lien-public {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.lien-public__message,
+.lien-public__aide {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+
+.lien-public__corps {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.lien-public__qr {
+  width: 11rem;
+  height: 11rem;
+  padding: 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff; /* un QR code se lit mieux sur fond blanc, même en thème sombre */
+}
+
+.lien-public__actions {
+  display: grid;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.lien-public__libelle {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.lien-public__url {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.lien-public__url input {
+  flex: 1;
+  min-width: 0;
+  height: 2.75rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--cream);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.lien-public__url input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.lien-public__boutons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.lien-public__boutons .btn {
+  text-decoration: none;
+}
+
+.lien-public__regenerer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--line);
+  font-size: 0.875rem;
+}
+
+@media (max-width: 560px) {
+  .lien-public__corps {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .lien-public__actions {
+    width: 100%;
+  }
+}

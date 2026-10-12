@@ -11,11 +11,14 @@ import ListeVehiculesPage from '@/features/vehicules-chauffeurs/pages/ListeVehic
 import ListeChauffeursPage from '@/features/vehicules-chauffeurs/pages/ListeChauffeursPage';
 import ListeSallesPage from '@/features/salles/pages/ListeSallesPage';
 import PlanningSemainePage from '@/features/salles/pages/PlanningSemainePage';
+import PlanningPublicPage from '@/features/salles/pages/PlanningPublicPage';
 import SuiviDemandesSallePage from '@/features/salles/pages/SuiviDemandesSallePage';
 import MesDemandesPage from '@/features/mes-demandes/pages/MesDemandesPage';
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
+  // Planning des salles en lecture seule, sans connexion (lien public / QR code)
+  { path: '/planning/:jeton', element: <PlanningPublicPage /> },
   {
     // Toutes les autres pages exigent d'être connecté
     element: <RouteProtegee />,

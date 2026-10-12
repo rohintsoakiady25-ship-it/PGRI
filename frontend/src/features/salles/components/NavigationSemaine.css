@@ -1,0 +1,94 @@
+/* Barre d'outils du planning : Aujourd'hui, semaine précédente / suivante, choix d'une date */
+.navigation-semaine {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+/* Barre d'outils : Aujourd'hui, semaine précédente / suivante, choix d'une date — même hauteur et même style */
+.outil {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 2.5rem;
+  padding: 0 0.875rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+
+.outil:hover {
+  border-color: var(--ink-soft);
+  background: var(--cream);
+}
+
+.outil:focus-visible,
+.outil--date:focus-within {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* « Aujourd'hui » quand la semaine affichée est déjà celle d'aujourd'hui */
+.outil[aria-pressed='true'] {
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.outil--icone {
+  justify-content: center;
+  width: 2.5rem;
+  padding: 0;
+}
+
+.outil--precedent svg {
+  transform: scaleX(-1);
+}
+
+/* Les deux flèches collées l'une à l'autre */
+.outil-groupe {
+  display: inline-flex;
+}
+
+.outil-groupe .outil:first-child {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.outil-groupe .outil:last-child {
+  margin-left: -1px;
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.outil-groupe .outil:focus-visible {
+  position: relative;
+  z-index: 1;
+}
+
+.outil--date {
+  padding: 0 0.625rem;
+  color: var(--ink-soft);
+  cursor: text;
+}
+
+.outil--date input {
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-variant-numeric: tabular-nums;
+}
+
+.outil--date input:focus {
+  outline: none; /* le contour est porté par .outil--date */
+}

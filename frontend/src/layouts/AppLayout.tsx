@@ -183,12 +183,29 @@ export default function AppLayout({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="menu__bas">
-          <button type="button" className="menu__lien menu__deconnexion" onClick={seDeconnecter} title={replie ? 'Se déconnecter' : undefined}>
-            <span className="menu__icone">
-              <IconDeconnexion />
+          {/* Utilisateur connecté et déconnexion (icône seule) */}
+          <div className="menu__compte">
+            <span className="menu__avatar" aria-hidden="true">
+              <IconUtilisateur />
             </span>
-            <span className="menu__label">Se déconnecter</span>
-          </button>
+            <span className="menu__identite">
+              <span className="menu__nom" title={utilisateur?.nomComplet}>
+                {utilisateur?.nomComplet ?? ''}
+              </span>
+              <span className="menu__detail">
+                {utilisateur?.source === 'AD' ? utilisateur.service || utilisateur.login : 'Compte local'}
+              </span>
+            </span>
+            <button
+              type="button"
+              className="menu__deconnexion"
+              onClick={seDeconnecter}
+              aria-label="Se déconnecter"
+              title="Se déconnecter"
+            >
+              <IconDeconnexion />
+            </button>
+          </div>
           <p className="menu__pied">DSII — Madagascar National Parks</p>
         </div>
       </aside>
@@ -208,14 +225,6 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
           <BoutonTheme />
 
-          <div className="barre__utilisateur">
-            <span className="barre__avatar" aria-hidden="true">
-              <IconUtilisateur />
-            </span>
-            <span className="barre__nom" title={utilisateur ? `${utilisateur.login} · ${utilisateur.source === 'AD' ? 'Active Directory' : 'compte local'}` : undefined}>
-              {utilisateur?.nomComplet ?? ''}
-            </span>
-          </div>
         </header>
 
         <main className="shell__main">{children}</main>

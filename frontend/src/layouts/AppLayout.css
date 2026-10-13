@@ -240,19 +240,72 @@
   border-top: 1px solid var(--line);
 }
 
-.menu__deconnexion {
-  width: 100%;
-  border: 0;
-  background: none;
-  font: inherit;
-  font-size: 0.9375rem;
-  text-align: left;
-  cursor: pointer;
+.menu__compte {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 3rem;
+  padding: 0.25rem 0 0.25rem 0.25rem;
 }
 
-.menu__deconnexion:hover,
-.menu__deconnexion:hover .menu__icone {
+.menu__avatar {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 50%;
+  background: var(--cream);
+  color: var(--mnp-orange-deep);
+}
+
+.menu__identite {
+  display: grid;
+  flex: 1;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.menu__nom,
+.menu__detail {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.menu__nom {
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.menu__detail {
+  color: var(--ink-soft);
+  font-size: 0.75rem;
+}
+
+/* Déconnexion : icône seule, libellé pour les lecteurs d'écran et au survol */
+.menu__deconnexion {
+  display: grid;
+  flex-shrink: 0;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 0;
+  border-radius: 8px;
+  background: none;
+  color: var(--ink-soft);
+  cursor: pointer;
+  transition: background-color 150ms ease, color 150ms ease;
+}
+
+.menu__deconnexion:hover {
+  background: color-mix(in srgb, var(--alert-text) 10%, transparent);
   color: var(--alert-text);
+}
+
+.menu__deconnexion:focus-visible {
+  outline: 3px solid var(--mnp-yellow);
+  outline-offset: -1px;
 }
 
 .menu__pied {
@@ -276,8 +329,15 @@
 .shell--replie .menu__marque-texte,
 .shell--replie .menu__label,
 .shell--replie .menu__titre,
-.shell--replie .menu__pied {
+.shell--replie .menu__pied,
+.shell--replie .menu__avatar,
+.shell--replie .menu__identite {
   display: none;
+}
+
+.shell--replie .menu__compte {
+  justify-content: center;
+  padding: 0.25rem 0;
 }
 
 .shell--replie .menu__groupe + .menu__groupe {
@@ -361,23 +421,6 @@
   outline-offset: 2px;
 }
 
-.barre__utilisateur {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  font-size: 0.875rem;
-}
-
-.barre__avatar {
-  display: grid;
-  place-items: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 50%;
-  background: var(--cream);
-  color: var(--mnp-orange-deep);
-}
-
 /* ---------- Mobile : le menu devient un tiroir ---------- */
 
 @media (max-width: 900px) {
@@ -417,6 +460,16 @@
   .shell--replie .menu__titre,
   .shell--replie .menu__pied {
     display: block;
+  }
+
+  .shell--replie .menu__avatar,
+  .shell--replie .menu__identite {
+    display: grid;
+  }
+
+  .shell--replie .menu__compte {
+    justify-content: flex-start;
+    padding: 0.25rem 0 0.25rem 0.25rem;
   }
 
   .shell--replie .menu__logo {
@@ -463,7 +516,6 @@
 }
 
 @media (max-width: 560px) {
-  .barre__nom,
   .barre__lien-texte {
     display: none;
   }

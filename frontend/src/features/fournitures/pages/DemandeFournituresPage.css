@@ -18,11 +18,11 @@
 }
 
 .lignes th:first-child {
-  width: 38%;
+  width: auto;
 }
 
 .lignes__unite {
-  width: 6rem;
+  width: 9rem;
 }
 
 .lignes__qte {
@@ -77,8 +77,7 @@
     width: auto !important;
   }
 
-  .lignes td[data-label='Article'],
-  .lignes td[data-label='Observations'] {
+  .lignes td[data-label='Article'] {
     grid-column: 1 / -1;
   }
 

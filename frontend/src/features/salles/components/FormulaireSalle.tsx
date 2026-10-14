@@ -13,7 +13,6 @@ export default function FormulaireSalle({ salle, onEnregistre, onAnnuler }: Prop
   const [valeurs, setValeurs] = useState({
     nom: salle?.nom ?? '',
     capacite: String(salle?.capacite ?? ''),
-    equipements: salle?.equipements.join(', ') ?? '',
     localisation: salle?.localisation ?? '',
     actif: salle?.actif ?? true,
   });
@@ -28,7 +27,6 @@ export default function FormulaireSalle({ salle, onEnregistre, onAnnuler }: Prop
     const saisie: SalleSaisie = {
       nom: valeurs.nom,
       capacite: Number(valeurs.capacite),
-      equipements: valeurs.equipements.split(',').map((x) => x.trim()).filter(Boolean),
       localisation: valeurs.localisation.trim() || null,
       actif: valeurs.actif,
     };
@@ -56,13 +54,6 @@ export default function FormulaireSalle({ salle, onEnregistre, onAnnuler }: Prop
         <label htmlFor="s-capacite">Capacité (places)</label>
         <input id="s-capacite" type="number" min={1} max={500} required value={valeurs.capacite}
           onChange={(e) => maj('capacite', e.target.value)} />
-      </div>
-      <div className="formulaire__champ formulaire__champ--large">
-        <label htmlFor="s-equipements">
-          Équipements <span className="formulaire__facultatif">(séparés par des virgules)</span>
-        </label>
-        <input id="s-equipements" placeholder="Vidéoprojecteur, Écran, Visioconférence" value={valeurs.equipements}
-          onChange={(e) => maj('equipements', e.target.value)} />
       </div>
       <div className="formulaire__champ">
         <label htmlFor="s-localisation">

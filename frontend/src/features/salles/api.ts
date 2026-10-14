@@ -7,12 +7,13 @@ export interface Salle {
   id: string;
   nom: string;
   capacite: number;
+  /** Noms des équipements en service de la salle (gérés dans la page Équipements). */
   equipements: string[];
   localisation: string | null;
   actif: boolean;
 }
 
-export type SalleSaisie = Omit<Salle, 'id'>;
+export type SalleSaisie = Omit<Salle, 'id' | 'equipements'>;
 
 export const sallesApi = {
   /** Salles en service, pour réserver (tous les utilisateurs). */
@@ -22,6 +23,33 @@ export const sallesApi = {
   creer: (s: SalleSaisie) => api.post<Salle>('/salles', s).then((r) => r.data),
   modifier: (id: string, s: SalleSaisie) => api.put<Salle>(`/salles/${id}`, s).then((r) => r.data),
   supprimer: (id: string) => api.delete(`/salles/${id}`).then(() => undefined),
+};
+
+// ---------------------------------------------------------------- équipements
+
+export interface Equipement {
+  id: string;
+  nom: string;
+  description: string | null;
+  /** false : rattaché à une seule salle ; true : peut être dans plusieurs salles. */
+  plusieursSalles: boolean;
+  actif: boolean;
+  salles: { id: string; nom: string }[];
+}
+
+export interface EquipementSaisie {
+  nom: string;
+  description: string | null;
+  plusieursSalles: boolean;
+  salleIds: string[];
+  actif: boolean;
+}
+
+export const equipementsApi = {
+  lister: () => api.get<Equipement[]>('/equipements').then((r) => r.data),
+  creer: (e: EquipementSaisie) => api.post<Equipement>('/equipements', e).then((r) => r.data),
+  modifier: (id: string, e: EquipementSaisie) => api.put<Equipement>(`/equipements/${id}`, e).then((r) => r.data),
+  supprimer: (id: string) => api.delete(`/equipements/${id}`).then(() => undefined),
 };
 
 // ---------------------------------------------------------------- réservations

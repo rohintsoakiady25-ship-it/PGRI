@@ -23,7 +23,7 @@ export default function ListeSallesPage() {
     <>
       <ListePage
         titre="Liste des salles"
-        intro="Salles de réunion proposées à la réservation. Une salle hors service n’apparaît plus dans le formulaire."
+        intro="Salles de réunion proposées à la réservation. Une salle hors service n’apparaît plus dans le formulaire. Le matériel de chaque salle se gère dans la page Équipements."
         placeholderRecherche="Rechercher par nom, équipement ou localisation"
         recherche={recherche}
         onRecherche={setRecherche}

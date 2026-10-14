@@ -25,6 +25,14 @@ export const IconCalendrier = ({ taille = 20 }: { taille?: number }) => (
   </svg>
 );
 
+export const IconEquipement = ({ taille = 20 }: { taille?: number }) => (
+  <svg {...base(taille)}>
+    <rect x="3.5" y="7" width="13" height="9" rx="1.5" />
+    <circle cx="10" cy="11.5" r="2.2" />
+    <path d="M16.5 10 20.5 8v7l-4-2M7 16v3M13 16v3" />
+  </svg>
+);
+
 export const IconSalle = ({ taille = 20 }: { taille?: number }) => (
   <svg {...base(taille)}>
     <rect x="3.5" y="4" width="17" height="10.5" rx="1.5" />

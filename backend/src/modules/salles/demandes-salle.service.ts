@@ -8,7 +8,9 @@ import { Acteur, DemandesService, estGestionnaire } from '../demandes/demandes.s
 import { Commentaire } from '../demandes/entities/commentaire.entity';
 import { HistoriqueStatut } from '../demandes/entities/historique-statut.entity';
 import { Validation } from '../demandes/entities/validation.entity';
+import { Equipement } from '../ressources/entities/equipement.entity';
 import { Salle } from '../ressources/entities/salle.entity';
+import { vueSalle } from '../ressources/salles-ressource.service';
 import { Utilisateur } from '../utilisateurs/entities/utilisateur.entity';
 import { CommentaireDto, DecisionSalleDto, DemandeSalleDto, DisponibiliteDto, FiltreDemandesSalleDto } from './dto/demande-salle.dto';
 import { DemandeSalle } from './entities/demande-salle.entity';
@@ -80,7 +82,9 @@ export class DemandesSalleService {
    */
   async disponibilite(dto: DisponibiliteDto) {
     this.controlerCreneau(dto.debut, dto.fin);
-    const salles = await this.source.getRepository(Salle).find({ where: { actif: true }, order: { nom: 'ASC' } });
+    const salles = (
+      await this.source.getRepository(Salle).find({ where: { actif: true }, relations: { equipementsLies: true }, order: { nom: 'ASC' } })
+    ).map(vueSalle);
     const occupations = await this.occupationsDuJour(this.source.manager, dto.debut);
     const enConflit = (salleId: string, debut: Date, fin: Date) =>
       occupations.filter((o) => o.salleId === salleId && o.debut < fin && o.fin > debut);
@@ -173,6 +177,12 @@ export class DemandesSalleService {
     const id = await this.source.transaction(async (m) => {
       const salle = await this.verrouillerSalle(m, dto.salleId);
       if (!salle.actif) throw new BadRequestException(`« ${salle.nom} » est hors service.`);
+      // Équipements souhaités : seulement ceux de la salle choisie
+      const disponibles = await this.equipementsDe(m, salle.id);
+      const absents = (dto.equipementsSouhaites ?? []).filter((e) => !disponibles.has(e.toLowerCase()));
+      if (absents.length) {
+        throw new BadRequestException(`« ${salle.nom} » ne dispose pas de : ${absents.join(', ')}.`);
+      }
       if (dto.nbParticipants > salle.capacite) {
         throw new BadRequestException(`« ${salle.nom} » est trop petite : ${salle.capacite} places pour ${dto.nbParticipants} participants.`);
       }
@@ -277,6 +287,17 @@ export class DemandesSalleService {
     const salle = await m.getRepository(Salle).findOne({ where: { id: salleId }, lock: { mode: 'pessimistic_write' } });
     if (!salle) throw new NotFoundException('Salle introuvable.');
     return salle;
+  }
+
+  /** Noms (en minuscules) des équipements en service de la salle. */
+  private async equipementsDe(m: EntityManager, salleId: string): Promise<Set<string>> {
+    const liste = await m
+      .getRepository(Equipement)
+      .createQueryBuilder('e')
+      .innerJoin('e.salles', 's', 's.id = :salleId', { salleId })
+      .where('e.actif = true')
+      .getMany();
+    return new Set(liste.map((e) => e.nom.toLowerCase()));
   }
 
   /** Conflit : chevauchement avec une réservation en attente ou confirmée de la même salle. */

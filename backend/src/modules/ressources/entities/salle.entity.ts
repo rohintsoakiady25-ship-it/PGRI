@@ -1,4 +1,5 @@
-import { Check, Column, Entity, Unique } from 'typeorm';
+import { Check, Column, Entity, ManyToMany, Unique } from 'typeorm';
+import { Equipement } from './equipement.entity';
 import { Ressource } from './ressource.entity';
 
 /** Salle de réunion (Figure 3) : sous-type de Ressource, table concrète « salle ». */
@@ -10,10 +11,10 @@ export class Salle extends Ressource {
   @Column({ type: 'smallint' })
   capacite!: number;
 
-  /** Équipements disponibles (ex. Vidéoprojecteur, Visioconférence). */
-  @Column({ type: 'simple-array', default: '' })
-  equipements!: string[];
-
   @Column({ type: 'varchar', length: 150, nullable: true })
   localisation!: string | null;
+
+  /** Équipements disponibles dans la salle (gérés depuis la page Équipements). */
+  @ManyToMany(() => Equipement, (e) => e.salles, { onDelete: 'CASCADE' })
+  equipementsLies!: Equipement[];
 }

@@ -97,7 +97,6 @@ CREATE TABLE IF NOT EXISTS salle (
     cree_le             timestamp with time zone NOT NULL DEFAULT now(),
     modifie_le          timestamp with time zone NOT NULL DEFAULT now(),
     capacite            smallint                 NOT NULL,
-    equipements         text                     NOT NULL DEFAULT '',  -- liste séparée par des virgules
     localisation        varchar(150),
     CONSTRAINT pk_salle PRIMARY KEY (id),
     CONSTRAINT uq_salle_nom UNIQUE (nom),
@@ -105,6 +104,31 @@ CREATE TABLE IF NOT EXISTS salle (
 );
 
 COMMENT ON TABLE salle IS 'Salles de réunion réservables (Salle 1, Salle 2…)';
+
+-- Matériel des salles (écran, vidéoprojecteur…), rattaché à une ou plusieurs salles
+CREATE TABLE IF NOT EXISTS equipement (
+    id                  uuid                     NOT NULL DEFAULT uuid_generate_v4(),
+    nom                 varchar(100)             NOT NULL,
+    description         varchar(255),
+    plusieurs_salles    boolean                  NOT NULL DEFAULT false, -- false : une seule salle
+    actif               boolean                  NOT NULL DEFAULT true,
+    cree_le             timestamp with time zone NOT NULL DEFAULT now(),
+    modifie_le          timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT pk_equipement PRIMARY KEY (id),
+    CONSTRAINT uq_equipement_nom UNIQUE (nom)
+);
+
+CREATE TABLE IF NOT EXISTS equipement_salle (
+    equipement_id       uuid                     NOT NULL,
+    salle_id            uuid                     NOT NULL,
+    CONSTRAINT pk_equipement_salle PRIMARY KEY (equipement_id, salle_id),
+    CONSTRAINT fk_equipement_salle_equipement FOREIGN KEY (equipement_id) REFERENCES equipement (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_equipement_salle_salle FOREIGN KEY (salle_id) REFERENCES salle (id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS ix_equipement_salle_salle ON equipement_salle (salle_id);
+
+COMMENT ON COLUMN equipement.plusieurs_salles IS 'false : installé dans une seule salle ; true : utilisable dans plusieurs salles';
 
 -- ---------------------------------------------------------------------
 -- Demandes (Demande > DemandeSalle, DemandeDeplacement, DemandeFourniture)

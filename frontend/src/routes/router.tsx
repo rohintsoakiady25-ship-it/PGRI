@@ -11,6 +11,7 @@ import ListeVehiculesPage from '@/features/vehicules-chauffeurs/pages/ListeVehic
 import ListeChauffeursPage from '@/features/vehicules-chauffeurs/pages/ListeChauffeursPage';
 import ListeSallesPage from '@/features/salles/pages/ListeSallesPage';
 import PlanningSemainePage from '@/features/salles/pages/PlanningSemainePage';
+import EquipementsPage from '@/features/salles/pages/EquipementsPage';
 import PlanningPublicPage from '@/features/salles/pages/PlanningPublicPage';
 import SuiviDemandesSallePage from '@/features/salles/pages/SuiviDemandesSallePage';
 import MesDemandesPage from '@/features/mes-demandes/pages/MesDemandesPage';
@@ -46,6 +47,7 @@ export const router = createBrowserRouter([
         children: [
           { path: '/salles/liste', element: <ListeSallesPage /> },
           { path: '/salles/planning', element: <PlanningSemainePage /> },
+          { path: '/salles/equipements', element: <EquipementsPage /> },
         ],
       },
       { path: '/demandes/fournitures', element: <DemandeFournituresPage /> },

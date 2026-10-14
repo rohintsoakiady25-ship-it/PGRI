@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DemandePage, { Champ, Section } from '@/components/demande/DemandePage';
 import { messageErreur } from '@/api/client';
@@ -71,11 +71,16 @@ export default function DemandeSallePage() {
     return () => clearTimeout(t);
   }, [jour, debut, fin, salleId, nb]);
 
-  const tousEquipements = useMemo(() => [...new Set(salles.flatMap((s) => s.equipements))].sort((a, b) => a.localeCompare(b, 'fr')), [salles]);
   const salle = salles.find((s) => s.id === salleId);
   const etat = dispo?.salles.find((x) => x.salle.id === salleId);
-  const manquants = salle ? equipements.filter((e) => !salle.equipements.includes(e)) : [];
+  // Seuls les équipements de la salle choisie peuvent être demandés
+  const equipementsSalle = salle?.equipements ?? [];
   const alternatives = dispo?.salles.filter((x) => x.salle.id !== salleId && x.libre && x.capaciteSuffisante) ?? [];
+
+  useEffect(() => {
+    const dispo = salles.find((s) => s.id === salleId)?.equipements ?? [];
+    setEquipements((l) => l.filter((e) => dispo.includes(e)));
+  }, [salleId, salles]);
 
   function choisirDansPlanning(id: string, minutes: number) {
     const duree = Math.max(enMinutes(fin) - enMinutes(debut), 30);
@@ -225,11 +230,12 @@ export default function DemandeSallePage() {
           <input id="nbParticipants" type="number" min={1} max={500} required value={nbParticipants} onChange={(e) => setNbParticipants(e.target.value)} />
         </Champ>
         <div />
-        {tousEquipements.length > 0 && (
+        {salle && (
           <div className="champ champ--large">
-            <span className="champ__label">Équipements souhaités</span>
+            <span className="champ__label">Équipements souhaités <span className="champ__optional">({salle.nom})</span></span>
+            {equipementsSalle.length === 0 && <p className="champ__aide">Aucun équipement n’est enregistré pour {salle.nom}.</p>}
             <ul className="cases">
-              {tousEquipements.map((eq) => (
+              {equipementsSalle.map((eq) => (
                 <li key={eq}>
                   <label>
                     <input
@@ -242,13 +248,6 @@ export default function DemandeSallePage() {
                 </li>
               ))}
             </ul>
-            {manquants.length > 0 && salle && (
-              <p className="champ__aide">
-                {salle.nom} n’a pas : {manquants.join(', ')}.
-                {salles.some((s) => s.id !== salleId && manquants.every((m) => s.equipements.includes(m))) &&
-                  ` Disponible dans : ${salles.filter((s) => s.id !== salleId && manquants.every((m) => s.equipements.includes(m))).map((s) => s.nom).join(', ')}.`}
-              </p>
-            )}
           </div>
         )}
         <Champ id="participants" label="Participants" optionnel large>

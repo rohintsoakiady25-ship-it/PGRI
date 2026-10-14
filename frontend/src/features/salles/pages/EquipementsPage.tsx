@@ -1,0 +1,111 @@
+import { useEffect, useMemo, useState } from 'react';
+import ListePage from '@/components/liste/ListePage';
+import Badge from '@/components/common/Badge';
+import Modale from '@/components/common/Modale';
+import ConfirmerSuppression from '@/components/common/ConfirmerSuppression';
+import { normaliser, useListe } from '@/hooks/useListe';
+import { equipementsApi, sallesApi, type Equipement, type Salle } from '../api';
+import FormulaireEquipement from '../components/FormulaireEquipement';
+
+/** Matériel des salles de réunion (écran, vidéoprojecteur, tableau blanc…) : logistique et administrateur. */
+export default function EquipementsPage() {
+  const { elements, chargement, erreur, recharger } = useListe(equipementsApi.lister);
+  const [salles, setSalles] = useState<Salle[]>([]);
+  const [recherche, setRecherche] = useState('');
+  const [salleFiltre, setSalleFiltre] = useState('');
+  const [rattachement, setRattachement] = useState('');
+  const [edition, setEdition] = useState<Equipement | 'nouveau' | null>(null);
+  const [aSupprimer, setASupprimer] = useState<Equipement | null>(null);
+
+  useEffect(() => {
+    sallesApi.lister().then(setSalles).catch(() => setSalles([]));
+  }, []);
+
+  const visibles = useMemo(() => {
+    const q = normaliser(recherche.trim());
+    return elements.filter(
+      (e) =>
+        (!q || normaliser(`${e.nom} ${e.description ?? ''}`).includes(q)) &&
+        (!salleFiltre || e.salles.some((s) => s.id === salleFiltre)) &&
+        (!rattachement || String(e.plusieursSalles) === rattachement),
+    );
+  }, [elements, recherche, salleFiltre, rattachement]);
+
+  return (
+    <>
+      <ListePage
+        titre="Équipements"
+        intro="Matériel des salles de réunion. Un équipement est installé dans une seule salle, ou partagé entre plusieurs salles. Seuls les équipements de la salle choisie sont proposés lors d’une réservation."
+        placeholderRecherche="Rechercher un équipement"
+        recherche={recherche}
+        onRecherche={setRecherche}
+        filtres={[
+          { id: 'salle', label: 'Salle', valeur: salleFiltre, onChange: setSalleFiltre,
+            options: salles.map((s) => ({ valeur: s.id, libelle: s.nom })) },
+          { id: 'rattachement', label: 'Rattachement', valeur: rattachement, onChange: setRattachement,
+            options: [{ valeur: 'false', libelle: 'Une seule salle' }, { valeur: 'true', libelle: 'Plusieurs salles' }] },
+        ]}
+        colonnes={[{ label: 'Équipement' }, { label: 'Rattachement' }, { label: 'Salles' }, { label: 'Statut' }, { label: 'Actions', sr: true }]}
+        lignes={visibles.map((e) => ({
+          cle: e.id,
+          attenuee: !e.actif,
+          cellules: [
+            <span key="n">
+              <strong>{e.nom}</strong>
+              {e.description && <span className="liste__discret"> · {e.description}</span>}
+            </span>,
+            e.plusieursSalles ? 'Plusieurs salles' : 'Une seule salle',
+            e.salles.length ? e.salles.map((s) => s.nom).join(', ') : '—',
+            <Badge key="b" ton={e.actif ? 'succes' : 'neutre'}>{e.actif ? 'En service' : 'Hors service'}</Badge>,
+            <span key="a" className="liste__actions-ligne">
+              <button type="button" className="btn btn--petit" onClick={() => setEdition(e)} aria-label={`Modifier l’équipement ${e.nom}`}>
+                Modifier
+              </button>
+              <button type="button" className="btn btn--petit btn--petit-danger" onClick={() => setASupprimer(e)}
+                aria-label={`Supprimer l’équipement ${e.nom}`}>
+                Supprimer
+              </button>
+            </span>,
+          ],
+        }))}
+        chargement={chargement}
+        erreur={erreur}
+        total={elements.length}
+        messageVide="Aucun équipement enregistré. Ajoutez le matériel des salles avec le bouton « Ajouter un équipement »."
+        action={
+          <button type="button" className="btn btn--primary" onClick={() => setEdition('nouveau')}>
+            + Ajouter un équipement
+          </button>
+        }
+      />
+      <Modale
+        ouverte={edition !== null}
+        titre={edition === 'nouveau' ? 'Ajouter un équipement' : `Modifier ${edition ? edition.nom : ''}`}
+        onFermer={() => setEdition(null)}
+      >
+        <FormulaireEquipement
+          equipement={edition === 'nouveau' ? null : edition}
+          salles={salles}
+          onAnnuler={() => setEdition(null)}
+          onEnregistre={() => {
+            setEdition(null);
+            recharger();
+          }}
+        />
+      </Modale>
+      <Modale ouverte={aSupprimer !== null} titre="Supprimer l’équipement ?" onFermer={() => setASupprimer(null)}>
+        {aSupprimer && (
+          <ConfirmerSuppression
+            nom={aSupprimer.nom}
+            supprimer={() => equipementsApi.supprimer(aSupprimer.id)}
+            onAnnuler={() => setASupprimer(null)}
+            onSupprime={() => {
+              setASupprimer(null);
+              recharger();
+            }}
+          />
+        )}
+      </Modale>
+    </>
+  );
+}

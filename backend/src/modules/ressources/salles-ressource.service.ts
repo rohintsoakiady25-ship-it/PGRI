@@ -4,35 +4,52 @@ import { Repository } from 'typeorm';
 import { Salle } from './entities/salle.entity';
 import { SalleDto } from './dto/salle.dto';
 
+/** Ce que l'API renvoie d'une salle : ses équipements en service, par nom. */
+export type SalleVue = Omit<Salle, 'equipementsLies'> & { equipements: string[] };
+
+export const vueSalle = (s: Salle): SalleVue => {
+  const { equipementsLies, ...reste } = s;
+  return {
+    ...reste,
+    equipements: (equipementsLies ?? [])
+      .filter((e) => e.actif)
+      .map((e) => e.nom)
+      .sort((a, b) => a.localeCompare(b, 'fr')),
+  };
+};
+
 /** Référentiel des salles de réunion (Salle 1, Salle 2…). */
 @Injectable()
 export class SallesRessourceService {
   constructor(@InjectRepository(Salle) private readonly depot: Repository<Salle>) {}
 
   /** Salles en service d'abord, par nom. `seulementActives` : pour le formulaire de réservation. */
-  lister(seulementActives = false): Promise<Salle[]> {
-    return this.depot.find({
+  async lister(seulementActives = false): Promise<SalleVue[]> {
+    const liste = await this.depot.find({
       where: seulementActives ? { actif: true } : {},
+      relations: { equipementsLies: true },
       order: { actif: 'DESC', nom: 'ASC' },
     });
+    return liste.map(vueSalle);
   }
 
   async trouver(id: string): Promise<Salle> {
-    const s = await this.depot.findOne({ where: { id } });
+    const s = await this.depot.findOne({ where: { id }, relations: { equipementsLies: true } });
     if (!s) throw new NotFoundException('Salle introuvable.');
     return s;
   }
 
-  async creer(dto: SalleDto): Promise<Salle> {
+  async creer(dto: SalleDto): Promise<SalleVue> {
     await this.verifierNomLibre(dto.nom);
-    return this.depot.save(this.depot.create({ ...dto, localisation: dto.localisation ?? null, actif: dto.actif ?? true }));
+    const s = await this.depot.save(this.depot.create({ ...dto, localisation: dto.localisation ?? null, actif: dto.actif ?? true }));
+    return vueSalle({ ...s, equipementsLies: [] } as Salle);
   }
 
-  async modifier(id: string, dto: SalleDto): Promise<Salle> {
+  async modifier(id: string, dto: SalleDto): Promise<SalleVue> {
     const s = await this.trouver(id);
     if (dto.nom.toLowerCase() !== s.nom.toLowerCase()) await this.verifierNomLibre(dto.nom);
     Object.assign(s, dto, { localisation: dto.localisation ?? null, actif: dto.actif ?? s.actif });
-    return this.depot.save(s);
+    return vueSalle(await this.depot.save(s));
   }
 
   /** Suppression définitive, refusée si la salle a déjà des réservations (la mettre hors service à la place). */

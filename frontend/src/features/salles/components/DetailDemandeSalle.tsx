@@ -1,7 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import Badge from '@/components/common/Badge';
 import { messageErreur } from '@/api/client';
-import { creneau, dateHeure, demandesSalleApi, LIBELLE_STATUT, TON_STATUT, type DetailDemandeSalle } from '../api';
+import { creneau, dateHeure, demandesSalleApi, LIBELLE_STATUT, TON_STATUT, type ChoixAppareil, type DetailDemandeSalle } from '../api';
 import './DetailDemandeSalle.css';
 
 interface Props {
@@ -19,9 +19,26 @@ export default function DetailDemandeSalle({ id, onModifiee }: Props) {
   const [texte, setTexte] = useState('');
   const [confirmerAnnulation, setConfirmerAnnulation] = useState(false);
 
+  // Choix de l'appareil par la logistique : matériel demandé → appareil sélectionné
+  const [choixAppareils, setChoixAppareils] = useState<ChoixAppareil[]>([]);
+  const [selection, setSelection] = useState<Record<string, string>>({});
+
   useEffect(() => {
     demandesSalleApi.detail(id).then(setD).catch((e) => setErreur(messageErreur(e, 'La réservation n’a pas pu être chargée.')));
   }, [id]);
+
+  const peutDecider = Boolean(d?.actions.decider && d.equipementsSouhaites.length);
+  useEffect(() => {
+    if (!peutDecider) return;
+    demandesSalleApi
+      .appareils(id)
+      .then((c) => {
+        setChoixAppareils(c);
+        setSelection(Object.fromEntries(c.map((x) => [x.nom, x.attribueId ?? x.options[0]?.id ?? ''])));
+      })
+      .catch(() => setChoixAppareils([]));
+  }, [id, peutDecider]);
+  const appareilIds = choixAppareils.length ? Object.values(selection).filter(Boolean) : undefined;
 
   async function agir(action: () => Promise<DetailDemandeSalle>, apres?: () => void) {
     setErreur(null);
@@ -70,10 +87,17 @@ export default function DetailDemandeSalle({ id, onModifiee }: Props) {
           {d.nbParticipants}
           {d.participants && <span className="detail__liste">{d.participants}</span>}
         </dd>
-        {d.equipementsSouhaites.length > 0 && (
+        {(d.equipementsAttribues.length > 0 || d.equipementsSouhaites.length > 0) && (
           <>
             <dt>Équipements</dt>
-            <dd>{d.equipementsSouhaites.join(', ')}</dd>
+            <dd>
+              {d.equipementsAttribues.length > 0
+                ? d.equipementsAttribues.map((e) => `${e.nom} (${e.reference})`).join(', ')
+                : d.equipementsSouhaites.join(', ')}
+              {d.equipementsAttribues.length === 0 && d.statut === 'EN_ATTENTE_LOGISTIQUE' && (
+                <span className="detail__discret"> · attribués à la confirmation</span>
+              )}
+            </dd>
           </>
         )}
         <dt>Demandeur</dt>
@@ -94,6 +118,29 @@ export default function DetailDemandeSalle({ id, onModifiee }: Props) {
       {d.actions.decider && (
         <section className="detail__bloc detail__bloc--decision" aria-labelledby="decision-titre">
           <h3 id="decision-titre" className="detail__titre">Votre décision</h3>
+          {choixAppareils.length > 0 && (
+            <fieldset className="detail__appareils">
+              <legend className="detail__libelle">Matériel à attribuer</legend>
+              {choixAppareils.map((c) => (
+                <label key={c.nom} className="detail__appareil">
+                  <span>{c.nom}</span>
+                  {c.options.length === 0 ? (
+                    <span className="detail__discret">Aucun appareil libre : tous sont attribués à des réservations confirmées</span>
+                  ) : (
+                    <select value={selection[c.nom] ?? ''} onChange={(e) => setSelection((s) => ({ ...s, [c.nom]: e.target.value }))}>
+                      {c.options.map((o) => (
+                        <option key={o.id} value={o.id}>
+                          {o.reference}
+                          {o.partage ? ' (partagé)' : ''}
+                          {o.description ? ` · ${o.description}` : ''}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </label>
+              ))}
+            </fieldset>
+          )}
           <label className="detail__libelle" htmlFor="motif">
             Commentaire <span className="formulaire__facultatif">(obligatoire pour un refus)</span>
           </label>
@@ -104,7 +151,7 @@ export default function DetailDemandeSalle({ id, onModifiee }: Props) {
               Refuser
             </button>
             <button type="button" className="btn btn--primary" disabled={envoi}
-              onClick={() => agir(() => demandesSalleApi.decider(id, 'VALIDEE', motif.trim() || null), () => setMotif(''))}>
+              onClick={() => agir(() => demandesSalleApi.decider(id, 'VALIDEE', motif.trim() || null, appareilIds), () => setMotif(''))}>
               Confirmer la réservation
             </button>
           </div>

@@ -11,10 +11,8 @@ export const vueSalle = (s: Salle): SalleVue => {
   const { equipementsLies, ...reste } = s;
   return {
     ...reste,
-    equipements: (equipementsLies ?? [])
-      .filter((e) => e.actif)
-      .map((e) => e.nom)
-      .sort((a, b) => a.localeCompare(b, 'fr')),
+    // Types de matériel (plusieurs appareils peuvent porter le même nom)
+    equipements: [...new Set((equipementsLies ?? []).filter((e) => e.actif).map((e) => e.nom))].sort((a, b) => a.localeCompare(b, 'fr')),
   };
 };
 

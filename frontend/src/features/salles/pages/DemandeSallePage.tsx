@@ -73,14 +73,16 @@ export default function DemandeSallePage() {
 
   const salle = salles.find((s) => s.id === salleId);
   const etat = dispo?.salles.find((x) => x.salle.id === salleId);
-  // Seuls les équipements de la salle choisie peuvent être demandés
-  const equipementsSalle = salle?.equipements ?? [];
+  // Seuls les équipements de la salle choisie peuvent être demandés, avec le nombre d'appareils libres sur le créneau
+  const materiel = etat?.materiel ?? (salle?.equipements ?? []).map((nom) => ({ nom, total: 0, libres: -1 }));
   const alternatives = dispo?.salles.filter((x) => x.salle.id !== salleId && x.libre && x.capaciteSuffisante) ?? [];
 
+  // Changement de salle ou de créneau : on retire le matériel absent de la salle ou sans appareil libre
   useEffect(() => {
     const dispo = salles.find((s) => s.id === salleId)?.equipements ?? [];
-    setEquipements((l) => l.filter((e) => dispo.includes(e)));
-  }, [salleId, salles]);
+    const sansAppareil = new Set((etat?.materiel ?? []).filter((m) => m.libres === 0).map((m) => m.nom));
+    setEquipements((l) => l.filter((e) => dispo.includes(e) && !sansAppareil.has(e)));
+  }, [salleId, salles, etat]);
 
   function choisirDansPlanning(id: string, minutes: number) {
     const duree = Math.max(enMinutes(fin) - enMinutes(debut), 30);
@@ -233,17 +235,24 @@ export default function DemandeSallePage() {
         {salle && (
           <div className="champ champ--large">
             <span className="champ__label">Équipements souhaités <span className="champ__optional">({salle.nom})</span></span>
-            {equipementsSalle.length === 0 && <p className="champ__aide">Aucun équipement n’est enregistré pour {salle.nom}.</p>}
+            {materiel.length === 0 ? (
+              <p className="champ__aide">Aucun équipement n’est enregistré pour {salle.nom}.</p>
+            ) : (
+              <p className="champ__aide">L’appareil précis (par exemple VP-01) est attribué par la logistique à la confirmation.</p>
+            )}
             <ul className="cases">
-              {equipementsSalle.map((eq) => (
+              {materiel.map(({ nom: eq, libres }) => (
                 <li key={eq}>
-                  <label>
+                  <label className={libres === 0 ? 'cases__indisponible' : undefined}>
                     <input
                       type="checkbox"
+                      disabled={libres === 0}
                       checked={equipements.includes(eq)}
                       onChange={(e) => setEquipements((l) => (e.target.checked ? [...l, eq] : l.filter((x) => x !== eq)))}
                     />
                     {eq}
+                    {libres === 0 && <span className="cases__note">tous déjà attribués sur ce créneau</span>}
+                    {libres > 1 && <span className="cases__note">{libres} disponibles</span>}
                   </label>
                 </li>
               ))}

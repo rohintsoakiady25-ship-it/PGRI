@@ -2,15 +2,21 @@ import { Column, CreateDateColumn, Entity, JoinTable, ManyToMany, PrimaryGenerat
 import { Salle } from './salle.entity';
 
 /**
- * Matériel des salles de réunion (écran, vidéoprojecteur, tableau blanc…).
+ * Matériel des salles de réunion : un enregistrement par appareil (écran, vidéoprojecteur…),
+ * identifié par sa référence ; plusieurs appareils peuvent porter le même nom.
  * Rattachement paramétrable : installé dans une seule salle, ou utilisable dans plusieurs salles.
  */
 @Entity('equipement')
-@Unique('uq_equipement_nom', ['nom'])
+@Unique('uq_equipement_reference', ['reference'])
 export class Equipement {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
+  /** Référence de l'appareil attribuée par la logistique (ex. VP-01), en majuscules. */
+  @Column({ length: 30 })
+  reference!: string;
+
+  /** Type de matériel, commun à plusieurs appareils (ex. « Vidéoprojecteur »). */
   @Column({ length: 100 })
   nom!: string;
 

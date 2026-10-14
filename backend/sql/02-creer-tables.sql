@@ -105,17 +105,19 @@ CREATE TABLE IF NOT EXISTS salle (
 
 COMMENT ON TABLE salle IS 'Salles de réunion réservables (Salle 1, Salle 2…)';
 
--- Matériel des salles (écran, vidéoprojecteur…), rattaché à une ou plusieurs salles
+-- Matériel des salles : un enregistrement par appareil (référence unique),
+-- rattaché à une ou plusieurs salles ; plusieurs appareils peuvent porter le même nom
 CREATE TABLE IF NOT EXISTS equipement (
     id                  uuid                     NOT NULL DEFAULT uuid_generate_v4(),
-    nom                 varchar(100)             NOT NULL,
+    reference           varchar(30)              NOT NULL,             -- ex. VP-01, en majuscules
+    nom                 varchar(100)             NOT NULL,             -- type : « Vidéoprojecteur »…
     description         varchar(255),
     plusieurs_salles    boolean                  NOT NULL DEFAULT false, -- false : une seule salle
     actif               boolean                  NOT NULL DEFAULT true,
     cree_le             timestamp with time zone NOT NULL DEFAULT now(),
     modifie_le          timestamp with time zone NOT NULL DEFAULT now(),
     CONSTRAINT pk_equipement PRIMARY KEY (id),
-    CONSTRAINT uq_equipement_nom UNIQUE (nom)
+    CONSTRAINT uq_equipement_reference UNIQUE (reference)
 );
 
 CREATE TABLE IF NOT EXISTS equipement_salle (
@@ -215,3 +217,15 @@ CREATE TABLE IF NOT EXISTS parametre (
     modifie_le          timestamp with time zone NOT NULL DEFAULT now(),
     CONSTRAINT pk_parametre PRIMARY KEY (cle)
 );
+
+-- Appareils réservés par une demande de salle : un appareil ne sert qu'à une réservation à la fois
+-- (contrôlé par l'API sur les demandes en attente ou confirmées qui se chevauchent)
+CREATE TABLE IF NOT EXISTS demande_equipement (
+    demande_id          uuid                     NOT NULL,
+    equipement_id       uuid                     NOT NULL,
+    CONSTRAINT pk_demande_equipement PRIMARY KEY (demande_id, equipement_id),
+    CONSTRAINT fk_demande_equipement_demande FOREIGN KEY (demande_id) REFERENCES demande (id) ON UPDATE CASCADE ON DELETE CASCADE,
+    CONSTRAINT fk_demande_equipement_equipement FOREIGN KEY (equipement_id) REFERENCES equipement (id) ON UPDATE CASCADE ON DELETE CASCADE
+);
+
+CREATE INDEX IF NOT EXISTS ix_demande_equipement_equipement ON demande_equipement (equipement_id);

@@ -29,6 +29,8 @@ export const sallesApi = {
 
 export interface Equipement {
   id: string;
+  /** Référence de l'appareil (ex. VP-01) : plusieurs appareils peuvent porter le même nom. */
+  reference: string;
   nom: string;
   description: string | null;
   /** false : rattaché à une seule salle ; true : peut être dans plusieurs salles. */
@@ -38,6 +40,7 @@ export interface Equipement {
 }
 
 export interface EquipementSaisie {
+  reference: string;
   nom: string;
   description: string | null;
   plusieursSalles: boolean;
@@ -89,6 +92,8 @@ export interface DemandeSalle {
   objet: string;
   nbParticipants: number;
   equipementsSouhaites: string[];
+  /** Appareils réservés pour la réunion. */
+  equipementsAttribues: { id: string; nom: string; reference: string }[];
   participants: string | null;
   soumisLe: string | null;
   demandeur: PersonneResume & { direction: string | null; service: string | null };
@@ -101,6 +106,13 @@ export interface DetailDemandeSalle extends DemandeSalle {
   validations: { niveau: string; decision: 'VALIDEE' | 'REFUSEE'; date: string; validateur: PersonneResume | null; commentaire: string | null }[];
   commentaires: { id: string; texte: string; date: string; auteur: PersonneResume | null }[];
   historique: { ancienStatut: StatutSalle | null; nouveauStatut: StatutSalle; date: string; auteur: PersonneResume | null; commentaire: string | null }[];
+}
+
+/** Choix de l'appareil pour un matériel demandé, avant confirmation. */
+export interface ChoixAppareil {
+  nom: string;
+  attribueId: string | null;
+  options: { id: string; reference: string; partage: boolean; description: string | null }[];
 }
 
 export interface DemandeSalleSaisie {
@@ -127,6 +139,8 @@ export interface Occupation {
 export interface Disponibilite {
   salles: {
     salle: { id: string; nom: string; capacite: number; equipements: string[] };
+    /** Par type de matériel de la salle : appareils en service et appareils libres sur le créneau. */
+    materiel: { nom: string; total: number; libres: number }[];
     libre: boolean;
     capaciteSuffisante: boolean;
     conflits: { debut: string; fin: string }[];
@@ -145,8 +159,11 @@ export const demandesSalleApi = {
   mes: () => api.get<DemandeSalle[]>('/demandes-salle/mes').then((r) => r.data),
   aSuivre: () => api.get<DemandeSalle[]>('/demandes-salle').then((r) => r.data),
   detail: (id: string) => api.get<DetailDemandeSalle>(`/demandes-salle/${id}`).then((r) => r.data),
-  decider: (id: string, decision: 'VALIDEE' | 'REFUSEE', commentaire: string | null) =>
-    api.post<DetailDemandeSalle>(`/demandes-salle/${id}/decision`, { decision, commentaire }).then((r) => r.data),
+  /** Confirmation : `appareilIds` = appareils choisis par la logistique (un par matériel demandé). */
+  decider: (id: string, decision: 'VALIDEE' | 'REFUSEE', commentaire: string | null, appareilIds?: string[]) =>
+    api.post<DetailDemandeSalle>(`/demandes-salle/${id}/decision`, { decision, commentaire, appareilIds }).then((r) => r.data),
+  /** Pour chaque matériel demandé : appareil attribué et appareils libres (logistique). */
+  appareils: (id: string) => api.get<ChoixAppareil[]>(`/demandes-salle/${id}/appareils`).then((r) => r.data),
   annuler: (id: string) => api.post<DetailDemandeSalle>(`/demandes-salle/${id}/annulation`).then((r) => r.data),
   commenter: (id: string, texte: string) =>
     api.post<DetailDemandeSalle>(`/demandes-salle/${id}/commentaires`, { texte }).then((r) => r.data),

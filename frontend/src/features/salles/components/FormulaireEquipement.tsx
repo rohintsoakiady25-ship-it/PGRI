@@ -14,6 +14,7 @@ interface Props {
  * Rattachement : une seule salle (choix unique) ou plusieurs salles (cases à cocher).
  */
 export default function FormulaireEquipement({ equipement, salles, onEnregistre, onAnnuler }: Props) {
+  const [reference, setReference] = useState(equipement?.reference ?? '');
   const [nom, setNom] = useState(equipement?.nom ?? '');
   const [description, setDescription] = useState(equipement?.description ?? '');
   const [plusieursSalles, setPlusieursSalles] = useState(equipement?.plusieursSalles ?? false);
@@ -36,7 +37,7 @@ export default function FormulaireEquipement({ equipement, salles, onEnregistre,
     e.preventDefault();
     setErreur(null);
     setEnvoi(true);
-    const saisie: EquipementSaisie = { nom, description: description.trim() || null, plusieursSalles, salleIds, actif };
+    const saisie: EquipementSaisie = { reference, nom, description: description.trim() || null, plusieursSalles, salleIds, actif };
     try {
       onEnregistre(equipement ? await equipementsApi.modifier(equipement.id, saisie) : await equipementsApi.creer(saisie));
     } catch (err) {
@@ -54,10 +55,15 @@ export default function FormulaireEquipement({ equipement, salles, onEnregistre,
         </p>
       )}
       <div className="formulaire__champ">
-        <label htmlFor="eq-nom">Nom</label>
-        <input id="eq-nom" required autoFocus maxLength={100} placeholder="Vidéoprojecteur" value={nom} onChange={(e) => setNom(e.target.value)} />
+        <label htmlFor="eq-reference">Référence</label>
+        <input id="eq-reference" required autoFocus maxLength={30} placeholder="VP-01" value={reference}
+          onChange={(e) => setReference(e.target.value.toUpperCase())} />
       </div>
       <div className="formulaire__champ">
+        <label htmlFor="eq-nom">Nom</label>
+        <input id="eq-nom" required maxLength={100} placeholder="Vidéoprojecteur" value={nom} onChange={(e) => setNom(e.target.value)} />
+      </div>
+      <div className="formulaire__champ formulaire__champ--large">
         <label htmlFor="eq-description">
           Description <span className="formulaire__facultatif">(facultatif)</span>
         </label>

@@ -17,6 +17,8 @@ import { DemandeSalle } from './entities/demande-salle.entity';
 
 /** Statuts qui occupent la salle : une demande en attente bloque déjà le créneau. */
 const STATUTS_OCCUPANTS = [StatutDemande.EN_ATTENTE_LOGISTIQUE, StatutDemande.CONFIRMEE];
+/** Statuts qui occupent un appareil : les appareils ne sont fixés qu'à la confirmation par la logistique. */
+const STATUTS_APPAREILS = [StatutDemande.CONFIRMEE];
 
 /** Heures d'ouverture des salles, en heure de Madagascar (UTC+3, sans heure d'été). */
 const OUVERTURE = 7 * 60;
@@ -89,15 +91,18 @@ export class DemandesSalleService {
     const enConflit = (salleId: string, debut: Date, fin: Date) =>
       occupations.filter((o) => o.salleId === salleId && o.debut < fin && o.fin > debut);
 
-    const resultat = salles.map((s) => {
+    const resultat = [];
+    for (const s of salles) {
       const conflits = enConflit(s.id, dto.debut, dto.fin);
-      return {
+      resultat.push({
         salle: { id: s.id, nom: s.nom, capacite: s.capacite, equipements: s.equipements },
+        // Pour chaque type de matériel de la salle : appareils en service et appareils libres sur le créneau
+        materiel: await this.materielParType(this.source.manager, s.id, dto.debut, dto.fin),
         libre: conflits.length === 0,
         capaciteSuffisante: !dto.nbParticipants || dto.nbParticipants <= s.capacite,
         conflits: conflits.map((c) => ({ debut: c.debut, fin: c.fin })),
-      };
-    });
+      });
+    }
 
     let autreCreneau: { debut: Date; fin: Date } | null = null;
     const choisie = resultat.find((r) => r.salle.id === dto.salleId);
@@ -177,16 +182,12 @@ export class DemandesSalleService {
     const id = await this.source.transaction(async (m) => {
       const salle = await this.verrouillerSalle(m, dto.salleId);
       if (!salle.actif) throw new BadRequestException(`« ${salle.nom} » est hors service.`);
-      // Équipements souhaités : seulement ceux de la salle choisie
-      const disponibles = await this.equipementsDe(m, salle.id);
-      const absents = (dto.equipementsSouhaites ?? []).filter((e) => !disponibles.has(e.toLowerCase()));
-      if (absents.length) {
-        throw new BadRequestException(`« ${salle.nom} » ne dispose pas de : ${absents.join(', ')}.`);
-      }
       if (dto.nbParticipants > salle.capacite) {
         throw new BadRequestException(`« ${salle.nom} » est trop petite : ${salle.capacite} places pour ${dto.nbParticipants} participants.`);
       }
       await this.verifierLibre(m, salle, dto.debut, dto.fin);
+      // Matériel demandé : on vérifie seulement que la salle en dispose ; l'appareil est choisi à la confirmation
+      const materiel = await this.typesDeLaSalle(m, salle, dto.equipementsSouhaites ?? []);
 
       const d = m.create(DemandeSalle, {
         reference: await this.demandes.prochaineReference(m, 'SAL'),
@@ -198,7 +199,7 @@ export class DemandesSalleService {
         creneauFin: dto.fin,
         objet: dto.objet,
         nbParticipants: dto.nbParticipants,
-        equipementsSouhaites: dto.equipementsSouhaites ?? [],
+        equipementsSouhaites: materiel,
         participants: dto.participants ?? null,
       });
       await m.save(d);
@@ -224,6 +225,14 @@ export class DemandesSalleService {
         if (d.creneauDebut <= new Date()) throw new ConflictException('Le créneau est déjà commencé ou passé : la réservation ne peut plus être confirmée.');
         const salle = await this.verrouillerSalle(m, d.salleId);
         await this.verifierLibre(m, salle, d.creneauDebut, d.creneauFin, d.id);
+        if (dto.appareilIds) {
+          await this.reattribuerAppareils(m, d, dto.appareilIds);
+        } else if ((d.equipementsSouhaites ?? []).length && !(d.equipementsAttribues ?? []).length) {
+          const appareils = await this.attribuerAppareils(m, salle, d.equipementsSouhaites ?? [], d.creneauDebut, d.creneauFin);
+          await m.createQueryBuilder().relation(DemandeSalle, 'equipementsAttribues').of(d.id).add(appareils.map((a) => a.id));
+          d.equipementsAttribues = appareils;
+        }
+        await this.verifierAppareilsLibres(m, d);
       }
       await m.insert(Validation, {
         demande: { id: d.id },
@@ -259,6 +268,29 @@ export class DemandesSalleService {
     return this.detail(acteur, id);
   }
 
+  /**
+   * Pour la logistique, avant de confirmer : pour chaque type de matériel demandé,
+   * l'appareil attribué et les appareils de la salle libres sur le créneau.
+   */
+  async appareilsPossibles(acteur: Acteur, id: string) {
+    if (!estGestionnaire(acteur)) throw new ForbiddenException('Réservé au responsable logistique.');
+    const d = await this.charger(this.source.manager, id);
+    const libres = await this.appareilsLibres(this.source.manager, d.salleId, d.creneauDebut, d.creneauFin, d.id);
+    const meme = (a: string, b: string) => a.toLowerCase() === b.toLowerCase();
+    return (d.equipementsSouhaites ?? []).map((nom) => {
+      const attribue = (d.equipementsAttribues ?? []).find((e) => meme(e.nom, nom));
+      return {
+        nom,
+        attribueId: attribue?.id ?? null,
+        options: libres
+          .filter((e) => meme(e.nom, nom))
+          // Appareils installés dans la salle avant les appareils partagés : le premier est proposé par défaut
+          .sort((a, b) => Number(a.plusieursSalles) - Number(b.plusieursSalles) || a.reference.localeCompare(b.reference))
+          .map((e) => ({ id: e.id, reference: e.reference, partage: e.plusieursSalles, description: e.description })),
+      };
+    });
+  }
+
   /** Avis sur une demande, sans effet sur son statut. */
   async commenter(acteur: Acteur, id: string, dto: CommentaireDto) {
     const d = await this.charger(this.source.manager, id);
@@ -289,15 +321,116 @@ export class DemandesSalleService {
     return salle;
   }
 
-  /** Noms (en minuscules) des équipements en service de la salle. */
-  private async equipementsDe(m: EntityManager, salleId: string): Promise<Set<string>> {
-    const liste = await m
+  /** Appareils en service de la salle (installés ou partagés). */
+  private appareilsDeLaSalle(m: EntityManager, salleId: string): Promise<Equipement[]> {
+    return m
       .getRepository(Equipement)
       .createQueryBuilder('e')
       .innerJoin('e.salles', 's', 's.id = :salleId', { salleId })
       .where('e.actif = true')
+      .orderBy('e.reference', 'ASC')
       .getMany();
-    return new Set(liste.map((e) => e.nom.toLowerCase()));
+  }
+
+  /**
+   * Appareils de la salle libres sur le créneau : un appareil attribué à une réservation confirmée
+   * qui chevauche le créneau est indisponible, quelle que soit la salle de cette réservation.
+   */
+  private async appareilsLibres(m: EntityManager, salleId: string, debut: Date, fin: Date, sauf?: string): Promise<Equipement[]> {
+    const pris: { id: string }[] = await m.query(
+      `SELECT DISTINCT de.equipement_id AS id
+         FROM demande_equipement de JOIN demande d ON d.id = de.demande_id
+        WHERE d.statut = ANY($1) AND d.creneau_debut < $3 AND d.creneau_fin > $2 AND ($4::uuid IS NULL OR d.id <> $4)`,
+      [STATUTS_APPAREILS, debut, fin, sauf ?? null],
+    );
+    const occupes = new Set(pris.map((p) => p.id));
+    return (await this.appareilsDeLaSalle(m, salleId)).filter((e) => !occupes.has(e.id));
+  }
+
+  /** Par type de matériel de la salle : nombre d'appareils en service et nombre de libres sur le créneau. */
+  private async materielParType(m: EntityManager, salleId: string, debut: Date, fin: Date) {
+    const tous = await this.appareilsDeLaSalle(m, salleId);
+    const libres = new Set((await this.appareilsLibres(m, salleId, debut, fin)).map((e) => e.id));
+    const types = new Map<string, { nom: string; total: number; libres: number }>();
+    for (const e of tous) {
+      const t = types.get(e.nom.toLowerCase()) ?? { nom: e.nom, total: 0, libres: 0 };
+      t.total += 1;
+      if (libres.has(e.id)) t.libres += 1;
+      types.set(e.nom.toLowerCase(), t);
+    }
+    return [...types.values()].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+  }
+
+  /** Types demandés présents dans la salle, sous leur nom exact ; erreur si la salle n'en dispose pas. */
+  private async typesDeLaSalle(m: EntityManager, salle: Salle, types: string[]): Promise<string[]> {
+    const deLaSalle = await this.appareilsDeLaSalle(m, salle.id);
+    const absents = types.filter((t) => !deLaSalle.some((e) => e.nom.toLowerCase() === t.toLowerCase()));
+    if (absents.length) throw new BadRequestException(`« ${salle.nom} » ne dispose pas de : ${absents.join(', ')}.`);
+    return [...new Set(types.map((t) => deLaSalle.find((e) => e.nom.toLowerCase() === t.toLowerCase())!.nom))];
+  }
+
+  /**
+   * Un appareil libre par type demandé, de préférence un appareil installé dans la salle plutôt qu'un appareil partagé.
+   * Les appareils candidats sont verrouillés : deux réservations simultanées ne peuvent pas obtenir le même.
+   */
+  private async attribuerAppareils(m: EntityManager, salle: Salle, types: string[], debut: Date, fin: Date): Promise<Equipement[]> {
+    if (!types.length) return [];
+    const deLaSalle = await this.appareilsDeLaSalle(m, salle.id);
+    const absents = types.filter((t) => !deLaSalle.some((e) => e.nom.toLowerCase() === t.toLowerCase()));
+    if (absents.length) throw new BadRequestException(`« ${salle.nom} » ne dispose pas de : ${absents.join(', ')}.`);
+
+    const candidats = deLaSalle
+      .filter((e) => types.some((t) => t.toLowerCase() === e.nom.toLowerCase()))
+      .map((e) => e.id)
+      .sort();
+    await m.query('SELECT id FROM equipement WHERE id = ANY($1::uuid[]) ORDER BY id FOR UPDATE', [candidats]);
+    const libres = await this.appareilsLibres(m, salle.id, debut, fin);
+
+    return types.map((t) => {
+      const choix = libres
+        .filter((e) => e.nom.toLowerCase() === t.toLowerCase())
+        .sort((a, b) => Number(a.plusieursSalles) - Number(b.plusieursSalles) || a.reference.localeCompare(b.reference))[0];
+      if (!choix) {
+        throw new ConflictException(`Plus aucun « ${t} » libre pour « ${salle.nom} » sur ce créneau : tous sont déjà attribués à des réservations confirmées.`);
+      }
+      libres.splice(libres.indexOf(choix), 1);
+      return choix;
+    });
+  }
+
+  /**
+   * Remplace les appareils de la demande par ceux choisis par la logistique : un appareil libre de la salle
+   * pour chaque type de matériel demandé, ni plus ni moins.
+   */
+  private async reattribuerAppareils(m: EntityManager, d: DemandeSalle, ids: string[]) {
+    const uniques = [...new Set(ids)].sort();
+    await m.query('SELECT id FROM equipement WHERE id = ANY($1::uuid[]) ORDER BY id FOR UPDATE', [uniques]);
+    const libres = await this.appareilsLibres(m, d.salleId, d.creneauDebut, d.creneauFin, d.id);
+    const choisis = uniques.map((id) => {
+      const e = libres.find((x) => x.id === id);
+      if (!e) throw new ConflictException('Un des appareils choisis n’est pas libre sur ce créneau ou n’appartient pas à la salle.');
+      return e;
+    });
+    const types = (d.equipementsSouhaites ?? []).map((t) => t.toLowerCase()).sort();
+    const couverts = choisis.map((e) => e.nom.toLowerCase()).sort();
+    if (types.join('|') !== couverts.join('|')) {
+      throw new BadRequestException('Choisissez exactement un appareil pour chaque matériel demandé.');
+    }
+    const anciens = (d.equipementsAttribues ?? []).map((e) => e.id);
+    await m.createQueryBuilder().relation(DemandeSalle, 'equipementsAttribues').of(d.id).addAndRemove(uniques, anciens);
+    d.equipementsAttribues = choisis;
+  }
+
+  /** Avant confirmation : les appareils attribués à la demande sont toujours libres. */
+  private async verifierAppareilsLibres(m: EntityManager, d: DemandeSalle) {
+    const attribues = d.equipementsAttribues ?? [];
+    if (!attribues.length) return;
+    await m.query('SELECT id FROM equipement WHERE id = ANY($1::uuid[]) ORDER BY id FOR UPDATE', [attribues.map((e) => e.id).sort()]);
+    const libres = new Set((await this.appareilsLibres(m, d.salleId, d.creneauDebut, d.creneauFin, d.id)).map((e) => e.id));
+    const pris = attribues.filter((e) => !libres.has(e.id));
+    if (pris.length) {
+      throw new ConflictException(`Déjà réservé sur ce créneau : ${pris.map((e) => `${e.nom} (${e.reference})`).join(', ')}.`);
+    }
   }
 
   /** Conflit : chevauchement avec une réservation en attente ou confirmée de la même salle. */
@@ -364,6 +497,7 @@ export class DemandesSalleService {
       .createQueryBuilder('d')
       .leftJoinAndSelect('d.salle', 'salle')
       .leftJoinAndSelect('d.demandeur', 'demandeur')
+      .leftJoinAndSelect('d.equipementsAttribues', 'appareil')
       .loadRelationCountAndMap('d.nbCommentaires', 'd.commentaires')
       .orderBy('d.creneauDebut', 'DESC');
   }
@@ -371,7 +505,7 @@ export class DemandesSalleService {
   /** `verrouiller` : bloque la demande jusqu'à la fin de la transaction (deux décisions simultanées impossibles). */
   private async charger(m: EntityManager, id: string, verrouiller = false): Promise<DemandeSalle> {
     if (verrouiller) await m.query('SELECT 1 FROM demande WHERE id = $1 FOR UPDATE', [id]);
-    const d = await m.getRepository(DemandeSalle).findOne({ where: { id }, relations: { salle: true, demandeur: true } });
+    const d = await m.getRepository(DemandeSalle).findOne({ where: { id }, relations: { salle: true, demandeur: true, equipementsAttribues: true } });
     if (!d) throw new NotFoundException('Réservation introuvable.');
     return d;
   }
@@ -395,6 +529,9 @@ export class DemandesSalleService {
       objet: d.objet,
       nbParticipants: d.nbParticipants,
       equipementsSouhaites: d.equipementsSouhaites ?? [],
+      equipementsAttribues: (d.equipementsAttribues ?? [])
+        .map((e) => ({ id: e.id, nom: e.nom, reference: e.reference }))
+        .sort((a, b) => a.nom.localeCompare(b.nom, 'fr') || a.reference.localeCompare(b.reference)),
       participants: d.participants,
       soumisLe: d.soumisLe,
       demandeur: { id: d.demandeur.id, nomComplet: d.demandeur.nomComplet, direction: d.demandeur.direction, service: d.demandeur.service },

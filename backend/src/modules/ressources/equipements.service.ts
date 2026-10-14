@@ -8,6 +8,7 @@ import { Salle } from './entities/salle.entity';
 /** Ce que l'API renvoie d'un équipement. */
 export interface EquipementVue {
   id: string;
+  reference: string;
   nom: string;
   description: string | null;
   plusieursSalles: boolean;
@@ -24,13 +25,14 @@ export class EquipementsService {
   ) {}
 
   async lister(): Promise<EquipementVue[]> {
-    const liste = await this.depot.find({ relations: { salles: true }, order: { actif: 'DESC', nom: 'ASC' } });
+    const liste = await this.depot.find({ relations: { salles: true }, order: { actif: 'DESC', nom: 'ASC', reference: 'ASC' } });
     return liste.map((e) => this.vue(e));
   }
 
   async creer(dto: EquipementDto): Promise<EquipementVue> {
-    await this.verifierNomLibre(dto.nom);
+    await this.verifierReferenceLibre(dto.reference);
     const e = this.depot.create({
+      reference: dto.reference,
       nom: dto.nom,
       description: dto.description ?? null,
       plusieursSalles: dto.plusieursSalles,
@@ -42,8 +44,9 @@ export class EquipementsService {
 
   async modifier(id: string, dto: EquipementDto): Promise<EquipementVue> {
     const e = await this.trouver(id);
-    if (dto.nom.toLowerCase() !== e.nom.toLowerCase()) await this.verifierNomLibre(dto.nom);
+    if (dto.reference !== e.reference) await this.verifierReferenceLibre(dto.reference);
     Object.assign(e, {
+      reference: dto.reference,
       nom: dto.nom,
       description: dto.description ?? null,
       plusieursSalles: dto.plusieursSalles,
@@ -53,9 +56,13 @@ export class EquipementsService {
     return this.vue(await this.depot.save(e));
   }
 
-  /** Les réservations passées gardent le nom de l'équipement demandé : la suppression ne les modifie pas. */
+  /** Les réservations gardent le nom du matériel demandé ; seul le lien vers l'appareil supprimé disparaît. */
   async supprimer(id: string): Promise<void> {
-    await this.depot.remove(await this.trouver(id));
+    const e = await this.trouver(id);
+    await this.depot.manager.transaction(async (m) => {
+      await m.query('DELETE FROM demande_equipement WHERE equipement_id = $1', [id]);
+      await m.remove(e);
+    });
   }
 
   /** Salles existantes, et une seule si l'équipement n'est pas partagé. */
@@ -74,15 +81,16 @@ export class EquipementsService {
     return e;
   }
 
-  private async verifierNomLibre(nom: string) {
-    if (await this.depot.createQueryBuilder('e').where('lower(e.nom) = lower(:nom)', { nom }).getExists()) {
-      throw new ConflictException(`Un équipement nommé « ${nom} » existe déjà.`);
+  private async verifierReferenceLibre(reference: string) {
+    if (await this.depot.exists({ where: { reference } })) {
+      throw new ConflictException(`La référence « ${reference} » est déjà attribuée à un autre équipement.`);
     }
   }
 
   private vue(e: Equipement): EquipementVue {
     return {
       id: e.id,
+      reference: e.reference,
       nom: e.nom,
       description: e.description,
       plusieursSalles: e.plusieursSalles,

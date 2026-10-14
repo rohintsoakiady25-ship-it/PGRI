@@ -93,6 +93,12 @@ export class DecisionSalleDto {
   @IsIn(Object.values(DecisionValidation), { message: 'Décision inconnue.' })
   decision!: DecisionValidation;
 
+  /** Confirmation : appareils choisis par la logistique, un par type de matériel demandé (facultatif). */
+  @IsOptional()
+  @IsArray()
+  @IsUUID('4', { each: true, message: 'Appareil inconnu.' })
+  appareilIds?: string[];
+
   @Transform(texteFacultatif)
   @IsOptional()
   @IsString()

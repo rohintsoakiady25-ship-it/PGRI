@@ -63,6 +63,42 @@
   background: var(--cream);
 }
 
+.detail__appareils {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.detail__appareils legend {
+  margin-bottom: 0.25rem;
+  padding: 0;
+}
+
+.detail__appareil {
+  display: grid;
+  grid-template-columns: minmax(8rem, 12rem) 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.9375rem;
+}
+
+.detail__appareil select {
+  min-height: 2.5rem;
+  padding: 0 0.625rem;
+  border: 1px solid var(--line-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+}
+
+.detail__appareil select:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
 .detail__titre {
   margin: 0;
   font-size: 1rem;

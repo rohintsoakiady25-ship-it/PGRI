@@ -1,6 +1,7 @@
-import { ChildEntity, Column, JoinColumn, ManyToOne } from 'typeorm';
+import { ChildEntity, Column, JoinColumn, JoinTable, ManyToMany, ManyToOne } from 'typeorm';
 import { TypeDemande } from '../../../common/enums/type-demande.enum';
 import { Demande } from '../../demandes/entities/demande.entity';
+import { Equipement } from '../../ressources/entities/equipement.entity';
 import { Salle } from '../../ressources/entities/salle.entity';
 
 /**
@@ -29,8 +30,21 @@ export class DemandeSalle extends Demande {
   @Column({ name: 'nb_participants', type: 'smallint', nullable: true })
   nbParticipants!: number;
 
+  /** Types de matériel demandés (noms), conservés tels quels pour l'historique. */
   @Column({ name: 'equipements_souhaites', type: 'simple-array', nullable: true })
   equipementsSouhaites!: string[] | null;
+
+  /**
+   * Appareils attribués par la logistique à la confirmation (vide tant que la demande est en attente) :
+   * un appareil ne sert qu'à une réservation confirmée à la fois.
+   */
+  @ManyToMany(() => Equipement)
+  @JoinTable({
+    name: 'demande_equipement',
+    joinColumn: { name: 'demande_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'equipement_id', referencedColumnName: 'id' },
+  })
+  equipementsAttribues!: Equipement[];
 
   /** Liste libre des participants (facultatif). */
   @Column({ type: 'text', nullable: true })

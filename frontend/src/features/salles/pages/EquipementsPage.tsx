@@ -25,7 +25,7 @@ export default function EquipementsPage() {
     const q = normaliser(recherche.trim());
     return elements.filter(
       (e) =>
-        (!q || normaliser(`${e.nom} ${e.description ?? ''}`).includes(q)) &&
+        (!q || normaliser(`${e.reference} ${e.nom} ${e.description ?? ''}`).includes(q)) &&
         (!salleFiltre || e.salles.some((s) => s.id === salleFiltre)) &&
         (!rattachement || String(e.plusieursSalles) === rattachement),
     );
@@ -35,8 +35,8 @@ export default function EquipementsPage() {
     <>
       <ListePage
         titre="Équipements"
-        intro="Matériel des salles de réunion. Un équipement est installé dans une seule salle, ou partagé entre plusieurs salles. Seuls les équipements de la salle choisie sont proposés lors d’une réservation."
-        placeholderRecherche="Rechercher un équipement"
+        intro="Matériel des salles de réunion, un appareil par référence (VP-01, VP-02…). Un appareil est installé dans une seule salle ou partagé entre plusieurs ; une fois réservé, il est indisponible sur ce créneau dans toutes les salles."
+        placeholderRecherche="Rechercher par référence ou par nom"
         recherche={recherche}
         onRecherche={setRecherche}
         filtres={[
@@ -45,24 +45,25 @@ export default function EquipementsPage() {
           { id: 'rattachement', label: 'Rattachement', valeur: rattachement, onChange: setRattachement,
             options: [{ valeur: 'false', libelle: 'Une seule salle' }, { valeur: 'true', libelle: 'Plusieurs salles' }] },
         ]}
-        colonnes={[{ label: 'Équipement' }, { label: 'Rattachement' }, { label: 'Salles' }, { label: 'Statut' }, { label: 'Actions', sr: true }]}
+        colonnes={[{ label: 'Référence' }, { label: 'Équipement' }, { label: 'Rattachement' }, { label: 'Salles' }, { label: 'Statut' }, { label: 'Actions', sr: true }]}
         lignes={visibles.map((e) => ({
           cle: e.id,
           attenuee: !e.actif,
           cellules: [
+            <strong key="r">{e.reference}</strong>,
             <span key="n">
-              <strong>{e.nom}</strong>
+              {e.nom}
               {e.description && <span className="liste__discret"> · {e.description}</span>}
             </span>,
             e.plusieursSalles ? 'Plusieurs salles' : 'Une seule salle',
             e.salles.length ? e.salles.map((s) => s.nom).join(', ') : '—',
             <Badge key="b" ton={e.actif ? 'succes' : 'neutre'}>{e.actif ? 'En service' : 'Hors service'}</Badge>,
             <span key="a" className="liste__actions-ligne">
-              <button type="button" className="btn btn--petit" onClick={() => setEdition(e)} aria-label={`Modifier l’équipement ${e.nom}`}>
+              <button type="button" className="btn btn--petit" onClick={() => setEdition(e)} aria-label={`Modifier l’équipement ${e.reference}`}>
                 Modifier
               </button>
               <button type="button" className="btn btn--petit btn--petit-danger" onClick={() => setASupprimer(e)}
-                aria-label={`Supprimer l’équipement ${e.nom}`}>
+                aria-label={`Supprimer l’équipement ${e.reference}`}>
                 Supprimer
               </button>
             </span>,
@@ -80,7 +81,7 @@ export default function EquipementsPage() {
       />
       <Modale
         ouverte={edition !== null}
-        titre={edition === 'nouveau' ? 'Ajouter un équipement' : `Modifier ${edition ? edition.nom : ''}`}
+        titre={edition === 'nouveau' ? 'Ajouter un équipement' : `Modifier ${edition ? `${edition.nom} (${edition.reference})` : ''}`}
         onFermer={() => setEdition(null)}
       >
         <FormulaireEquipement
@@ -96,7 +97,7 @@ export default function EquipementsPage() {
       <Modale ouverte={aSupprimer !== null} titre="Supprimer l’équipement ?" onFermer={() => setASupprimer(null)}>
         {aSupprimer && (
           <ConfirmerSuppression
-            nom={aSupprimer.nom}
+            nom={`${aSupprimer.nom} (${aSupprimer.reference})`}
             supprimer={() => equipementsApi.supprimer(aSupprimer.id)}
             onAnnuler={() => setASupprimer(null)}
             onSupprime={() => {

@@ -61,6 +61,12 @@ export class DemandesSalleController {
     return this.service.detail(await this.acteur(req), id);
   }
 
+  /** Appareils attribués et appareils libres, pour le choix de la logistique avant confirmation. */
+  @Get(':id/appareils')
+  async appareils(@Req() req: RequeteAuth, @Param('id', ParseUUIDPipe) id: string) {
+    return this.service.appareilsPossibles(await this.acteur(req), id);
+  }
+
   @Post()
   async soumettre(@Req() req: RequeteAuth, @Body() dto: DemandeSalleDto) {
     return this.service.soumettre(await this.acteur(req), dto);

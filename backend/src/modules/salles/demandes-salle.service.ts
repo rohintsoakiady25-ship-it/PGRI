@@ -6,6 +6,7 @@ import { StatutDemande } from '../../common/enums/statut-demande.enum';
 import { DecisionValidation, NiveauValidation } from '../../common/enums/validation.enum';
 import { Acteur, DemandesService, estGestionnaire } from '../demandes/demandes.service';
 import { Commentaire } from '../demandes/entities/commentaire.entity';
+import { NotificationsService } from '../notifications/notifications.service';
 import { HistoriqueStatut } from '../demandes/entities/historique-statut.entity';
 import { Validation } from '../demandes/entities/validation.entity';
 import { Equipement } from '../ressources/entities/equipement.entity';
@@ -51,6 +52,7 @@ export class DemandesSalleService {
   constructor(
     @InjectDataSource() private readonly source: DataSource,
     private readonly demandes: DemandesService,
+    private readonly notifications: NotificationsService,
   ) {}
 
   // ---------------------------------------------------------------- consultation
@@ -216,7 +218,7 @@ export class DemandesSalleService {
     if (dto.decision === DecisionValidation.REFUSEE && !dto.commentaire) {
       throw new BadRequestException('Indiquez le motif du refus : il sera communiqué au demandeur.');
     }
-    await this.source.transaction(async (m) => {
+    const decidee = await this.source.transaction(async (m) => {
       const d = await this.charger(m, id, true);
       if (d.statut !== StatutDemande.EN_ATTENTE_LOGISTIQUE) {
         throw new ConflictException(`Cette demande n'est plus en attente de validation (statut : ${d.statut}).`);
@@ -243,6 +245,19 @@ export class DemandesSalleService {
       });
       const statut = dto.decision === DecisionValidation.VALIDEE ? StatutDemande.CONFIRMEE : StatutDemande.REFUSEE;
       await this.demandes.changerStatut(m, d, statut, acteur.id, dto.commentaire ?? null);
+      return d;
+    });
+    // Après validation de la transaction : le demandeur est prévenu par e-mail
+    this.notifications.decisionSalle({
+      reference: decidee.reference,
+      confirmee: dto.decision === DecisionValidation.VALIDEE,
+      demandeur: decidee.demandeur,
+      salle: decidee.salle?.nom ?? '—',
+      objet: decidee.objet,
+      creneauDebut: decidee.creneauDebut,
+      creneauFin: decidee.creneauFin,
+      appareils: (decidee.equipementsAttribues ?? []).map((a) => ({ nom: a.nom, reference: a.reference })),
+      commentaire: dto.commentaire ?? null,
     });
     return this.detail(acteur, id);
   }

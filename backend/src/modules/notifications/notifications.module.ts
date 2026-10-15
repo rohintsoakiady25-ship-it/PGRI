@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
+import { MailService } from './mail.service';
+import { NotificationsService } from './notifications.service';
 
-/** E-mails automatiques à chaque changement de statut (SMTP). */
+/** E-mails automatiques aux demandeurs, envoyés par Microsoft Graph depuis la boîte de la plateforme. */
 @Module({
-  imports: [],
-  controllers: [],
-  providers: [],
-  exports: [],
+  providers: [MailService, NotificationsService],
+  exports: [NotificationsService],
 })
 export class NotificationsModule {}

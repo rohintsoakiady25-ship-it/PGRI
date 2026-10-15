@@ -39,9 +39,12 @@ export default () => ({
     secret: process.env.JWT_SECRET ?? '',
     expiresIn: process.env.JWT_EXPIRES_IN ?? '8h',
   },
-  smtp: {
-    host: process.env.SMTP_HOST,
-    port: parseInt(process.env.SMTP_PORT ?? '587', 10),
-    from: process.env.SMTP_FROM,
+  /** E-mails automatiques par Microsoft Graph (application Azure AD) ; désactivés si un réglage manque. */
+  mail: {
+    tenantId: process.env.AZURE_TENANT_ID ?? '',
+    clientId: process.env.AZURE_CLIENT_ID ?? '',
+    clientSecret: process.env.AZURE_CLIENT_SECRET ?? '',
+    /** Boîte d'envoi (ex. webmaster@mnparks.mg). */
+    expediteur: process.env.MAIL_SENDER_ADDRESS ?? '',
   },
 });

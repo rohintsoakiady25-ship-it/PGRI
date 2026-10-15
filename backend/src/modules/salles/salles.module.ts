@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DemandesModule } from '../demandes/demandes.module';
+import { NotificationsModule } from '../notifications/notifications.module';
 import { ParametresModule } from '../parametres/parametres.module';
 import { UtilisateursModule } from '../utilisateurs/utilisateurs.module';
 import { DemandesSalleController } from './demandes-salle.controller';
@@ -14,7 +15,7 @@ import { PlanningPublicService } from './planning-public.service';
  * planning public consultable par QR code.
  */
 @Module({
-  imports: [TypeOrmModule.forFeature([DemandeSalle]), DemandesModule, UtilisateursModule, ParametresModule],
+  imports: [TypeOrmModule.forFeature([DemandeSalle]), DemandesModule, UtilisateursModule, ParametresModule, NotificationsModule],
   controllers: [DemandesSalleController, LienPublicController, PlanningPublicController],
   providers: [DemandesSalleService, PlanningPublicService],
 })

@@ -20,6 +20,8 @@ interface CompteTest {
   nomComplet: string;
   direction: string;
   service: string;
+  /** Adresse des e-mails automatiques (les comptes AD ont celle de l'annuaire). */
+  email: string;
   roles: Role[];
   actif: boolean;
   role_teste: string;
@@ -30,14 +32,18 @@ interface CompteTest {
 const FICHIER = join(__dirname, 'utilisateurs-test.local.json');
 const mdp = () => randomBytes(9).toString('base64url'); // 12 caractères
 
+/** Boîte qui reçoit les e-mails de test (EMAIL_COMPTES_TEST) ; la logistique locale utilise la boîte de la plateforme. */
+const EMAIL_TEST = process.env.EMAIL_COMPTES_TEST?.trim() ?? '';
+const EMAIL_LOGISTIQUE = process.env.MAIL_SENDER_ADDRESS?.trim() ?? '';
+
 const MODELES: Omit<CompteTest, 'motDePasse'>[] = [
-  { login: 'agent.test', nomComplet: 'Agent Test', direction: 'DOPE', service: 'Suivi écologique', roles: [Role.DEMANDEUR], actif: true, role_teste: 'Demandeur simple (N+1 : chef.test)', superieur: 'chef.test' },
-  { login: 'chef.test', nomComplet: 'Chef de Service Test', direction: 'DOPE', service: 'Suivi écologique', roles: [Role.DEMANDEUR], actif: true, role_teste: 'Supérieur direct (N+1) de agent.test' },
-  { login: 'logistique.test', nomComplet: 'Responsable Logistique Test', direction: 'DAF', service: 'Logistique', roles: [Role.DEMANDEUR, Role.LOGISTIQUE], actif: true, role_teste: 'Responsable logistique' },
-  { login: 'magasinier.test', nomComplet: 'Magasinier Test', direction: 'DAF', service: 'Magasin', roles: [Role.DEMANDEUR, Role.MAGASINIER], actif: true, role_teste: 'Magasinier' },
-  { login: 'assistante.test', nomComplet: 'Assistante Direction Test', direction: 'DOPE', service: 'Secrétariat DOPE', roles: [Role.DEMANDEUR, Role.ASSISTANTE_DIRECTION], actif: true, role_teste: 'Assistante de direction (DOPE : voit les demandes de agent.test)' },
-  { login: 'admin.test', nomComplet: 'Administrateur Test', direction: 'DSII', service: 'Informatique', roles: [Role.DEMANDEUR, Role.ADMIN], actif: true, role_teste: 'Administrateur' },
-  { login: 'desactive.test', nomComplet: 'Compte Désactivé Test', direction: 'DOPE', service: 'Suivi écologique', roles: [Role.DEMANDEUR], actif: false, role_teste: 'Compte désactivé : la connexion doit être refusée' },
+  { login: 'agent.test', nomComplet: 'Agent Test', direction: 'DOPE', service: 'Suivi écologique', email: EMAIL_TEST, roles: [Role.DEMANDEUR], actif: true, role_teste: 'Demandeur simple (N+1 : chef.test)', superieur: 'chef.test' },
+  { login: 'chef.test', nomComplet: 'Chef de Service Test', direction: 'DOPE', service: 'Suivi écologique', email: EMAIL_TEST, roles: [Role.DEMANDEUR], actif: true, role_teste: 'Supérieur direct (N+1) de agent.test' },
+  { login: 'logistique.test', nomComplet: 'Responsable Logistique Test', direction: 'DAF', service: 'Logistique', email: EMAIL_LOGISTIQUE, roles: [Role.DEMANDEUR, Role.LOGISTIQUE], actif: true, role_teste: 'Responsable logistique' },
+  { login: 'magasinier.test', nomComplet: 'Magasinier Test', direction: 'DAF', service: 'Magasin', email: EMAIL_TEST, roles: [Role.DEMANDEUR, Role.MAGASINIER], actif: true, role_teste: 'Magasinier' },
+  { login: 'assistante.test', nomComplet: 'Assistante Direction Test', direction: 'DOPE', service: 'Secrétariat DOPE', email: EMAIL_TEST, roles: [Role.DEMANDEUR, Role.ASSISTANTE_DIRECTION], actif: true, role_teste: 'Assistante de direction (DOPE : voit les demandes de agent.test)' },
+  { login: 'admin.test', nomComplet: 'Administrateur Test', direction: 'DSII', service: 'Informatique', email: EMAIL_TEST, roles: [Role.DEMANDEUR, Role.ADMIN], actif: true, role_teste: 'Administrateur' },
+  { login: 'desactive.test', nomComplet: 'Compte Désactivé Test', direction: 'DOPE', service: 'Suivi écologique', email: EMAIL_TEST, roles: [Role.DEMANDEUR], actif: false, role_teste: 'Compte désactivé : la connexion doit être refusée' },
 ];
 
 function chargerComptes(): CompteTest[] {
@@ -46,7 +52,10 @@ function chargerComptes(): CompteTest[] {
     const contenu = JSON.parse(readFileSync(FICHIER, 'utf8'));
     const connus = new Set(contenu.comptes.map((c: CompteTest) => c.login));
     const nouveaux = MODELES.filter((m) => !connus.has(m.login)).map((m) => ({ ...m, motDePasse: mdp() }));
-    if (nouveaux.length) {
+    // Comptes créés avant l'ajout des e-mails : on reprend l'adresse du modèle
+    const sansEmail = contenu.comptes.filter((c: CompteTest) => !c.email);
+    for (const c of sansEmail) c.email = MODELES.find((m) => m.login === c.login)?.email || EMAIL_TEST;
+    if (nouveaux.length || sansEmail.length) {
       contenu.comptes.push(...nouveaux);
       writeFileSync(FICHIER, JSON.stringify(contenu, null, 2));
     }
@@ -81,6 +90,7 @@ async function main() {
     u.nomComplet = c.nomComplet;
     u.direction = c.direction;
     u.service = c.service;
+    u.email = c.email || null;
     u.roles = c.roles;
     u.actif = c.actif;
     await depot.save(u);

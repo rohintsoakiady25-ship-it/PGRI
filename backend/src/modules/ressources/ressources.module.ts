@@ -10,7 +10,7 @@ import { SallesRessourceService } from './salles-ressource.service';
 import { VehiculesController } from './vehicules.controller';
 import { VehiculesService } from './vehicules.service';
 
-/** Ressource abstraite et ses sous-types : véhicule et salle (avec ses équipements), article de stock (à venir). */
+/** Ressource abstraite et ses sous-types : véhicule et salle (avec ses équipements) ; l’article de stock est géré par le module fournitures. */
 @Module({
   imports: [TypeOrmModule.forFeature([Vehicule, Salle, Equipement])],
   controllers: [VehiculesController, SallesRessourceController, EquipementsController],

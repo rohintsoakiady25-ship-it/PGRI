@@ -1,0 +1,64 @@
+/* Réception de fournitures : colonnes supplémentaires et historique */
+.lignes--entree th:first-child {
+  width: auto;
+}
+
+.lignes--entree .lignes__unite {
+  width: 6.5rem;
+}
+
+.lignes--entree .lignes__categorie {
+  width: 8rem;
+}
+
+.lignes--entree .lignes__qte {
+  width: 6.5rem;
+}
+
+.lignes__etat {
+  display: block;
+  min-height: 1.1rem;
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+}
+
+.lignes input[readonly] {
+  background: var(--disabled-bg);
+  color: var(--ink-soft);
+}
+
+.entrees {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.entrees__ligne {
+  display: grid;
+  gap: 0.125rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--line);
+}
+
+.entrees__ligne:last-child {
+  border-bottom: 0;
+}
+
+.entrees__article {
+  font-size: 0.875rem;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.entrees__detail {
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 560px) {
+  .lignes--entree td[data-label='Article'] {
+    grid-column: 1 / -1;
+  }
+}

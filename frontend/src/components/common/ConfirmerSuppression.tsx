@@ -6,10 +6,14 @@ interface Props {
   supprimer: () => Promise<void>;
   onSupprime: () => void;
   onAnnuler: () => void;
+  /** Comment retirer l'élément sans le supprimer. */
+  conseil?: string;
 }
 
 /** Confirmation avant une suppression définitive. */
-export default function ConfirmerSuppression({ nom, supprimer, onSupprime, onAnnuler }: Props) {
+export default function ConfirmerSuppression({
+  nom, supprimer, onSupprime, onAnnuler, conseil = 'décochez « En service »',
+}: Props) {
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
 
@@ -33,8 +37,8 @@ export default function ConfirmerSuppression({ nom, supprimer, onSupprime, onAnn
         </p>
       )}
       <p className="formulaire__champ--large">
-        <strong>{nom}</strong> sera supprimé définitivement. Pour seulement ne plus le proposer, utilisez plutôt « Modifier » puis
-        décochez « En service ».
+        <strong>{nom}</strong> sera supprimé définitivement. Pour seulement ne plus le proposer, utilisez plutôt « Modifier » puis{' '}
+        {conseil}.
       </p>
       <div className="formulaire__actions">
         <button type="button" className="btn btn--secondary" onClick={onAnnuler} autoFocus>

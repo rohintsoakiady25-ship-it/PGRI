@@ -47,7 +47,16 @@ const menu: { titre: string | null; liens: LienMenu[] }[] = [
           { to: '/salles/equipements', label: 'Équipements', icone: <IconEquipement />, visible: peutGererReferentiels },
         ],
       },
-      { to: '/demandes/fournitures', label: 'Fournitures', icone: <IconFournitures /> },
+      {
+        to: '/demandes/fournitures',
+        label: 'Fournitures',
+        icone: <IconFournitures />,
+        enfants: [
+          { to: '/demandes/fournitures', label: 'Demande', icone: <IconNouvelleDemande /> },
+          { to: '/fournitures/ajouter', label: 'Ajouter des fournitures', icone: <IconFournitures taille={18} />, visible: peutGererReferentiels },
+          { to: '/fournitures/liste', label: 'Liste des fournitures', icone: <IconMesDemandes />, visible: peutGererReferentiels },
+        ],
+      },
     ],
   },
 ];

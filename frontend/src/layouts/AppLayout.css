@@ -42,8 +42,8 @@
   flex-direction: column;
   height: 100vh;
   height: 100dvh;
-  overflow-x: hidden;
-  overflow-y: auto;
+  /* seule la navigation défile : l'en-tête et le compte restent visibles */
+  overflow: hidden;
   border-right: 1px solid var(--line);
   background: var(--cream);
 }
@@ -51,6 +51,7 @@
 .menu__haut {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
   justify-content: space-between;
   gap: 0.5rem;
   padding: 0.875rem 0.75rem 0.875rem 1rem;
@@ -110,6 +111,10 @@
 
 .menu__nav {
   flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
   padding: 0.75rem 0.625rem;
 }
 
@@ -236,6 +241,7 @@
 
 /* Bas du menu : déconnexion + mention DSII */
 .menu__bas {
+  flex-shrink: 0;
   padding: 0.5rem 0.625rem 0;
   border-top: 1px solid var(--line);
 }

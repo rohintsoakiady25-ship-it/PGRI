@@ -229,3 +229,44 @@ CREATE TABLE IF NOT EXISTS demande_equipement (
 );
 
 CREATE INDEX IF NOT EXISTS ix_demande_equipement_equipement ON demande_equipement (equipement_id);
+
+-- ---------------------------------------------------------------------
+-- Fournitures du magasin (Ressource > ArticleStock) et mouvements de stock
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS article_stock (
+    id                  uuid                     NOT NULL DEFAULT uuid_generate_v4(),
+    nom                 varchar(150)             NOT NULL,             -- désignation, ex. « Rame de papier A4 »
+    actif               boolean                  NOT NULL DEFAULT true, -- false : retiré du catalogue
+    cree_le             timestamp with time zone NOT NULL DEFAULT now(),
+    modifie_le          timestamp with time zone NOT NULL DEFAULT now(),
+    reference           varchar(20)              NOT NULL,             -- ART-0001, attribuée par l'API
+    unite               varchar(30)              NOT NULL,             -- pièce, paquet, boîte, rame…
+    categorie           varchar(60),
+    quantite_stock      integer                  NOT NULL DEFAULT 0,
+    seuil_alerte        integer                  NOT NULL DEFAULT 0,
+    fournisseur         varchar(150),
+    CONSTRAINT pk_article_stock PRIMARY KEY (id),
+    CONSTRAINT uq_article_stock_reference UNIQUE (reference),
+    CONSTRAINT uq_article_stock_nom UNIQUE (nom),
+    CONSTRAINT ck_article_stock_quantite CHECK (quantite_stock >= 0),
+    CONSTRAINT ck_article_stock_seuil CHECK (seuil_alerte >= 0)
+);
+
+COMMENT ON COLUMN article_stock.seuil_alerte IS 'Stock bas quand quantite_stock <= seuil_alerte';
+
+CREATE TABLE IF NOT EXISTS mouvement_stock (
+    id                  uuid                     NOT NULL DEFAULT uuid_generate_v4(),
+    article_id          uuid                     NOT NULL,
+    type                varchar(12)              NOT NULL,             -- ENTREE, SORTIE ou AJUSTEMENT
+    quantite            integer                  NOT NULL,             -- signée pour un ajustement (écart)
+    auteur_id           uuid                     NOT NULL,
+    observation         varchar(255),                                  -- fournisseur, bon de livraison, motif
+    date                timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT pk_mouvement_stock PRIMARY KEY (id),
+    CONSTRAINT fk_mouvement_stock_article FOREIGN KEY (article_id) REFERENCES article_stock (id) ON DELETE CASCADE,
+    CONSTRAINT fk_mouvement_stock_auteur FOREIGN KEY (auteur_id) REFERENCES utilisateur (id),
+    CONSTRAINT ck_mouvement_stock_type CHECK (type IN ('ENTREE', 'SORTIE', 'AJUSTEMENT')),
+    CONSTRAINT ck_mouvement_stock_quantite CHECK (quantite <> 0)
+);
+
+CREATE INDEX IF NOT EXISTS ix_mouvement_stock_article ON mouvement_stock (article_id);

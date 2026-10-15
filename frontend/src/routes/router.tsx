@@ -7,6 +7,8 @@ import AccueilPage from '@/features/accueil/pages/AccueilPage';
 import DemandeDeplacementPage from '@/features/deplacements/pages/DemandeDeplacementPage';
 import DemandeSallePage from '@/features/salles/pages/DemandeSallePage';
 import DemandeFournituresPage from '@/features/fournitures/pages/DemandeFournituresPage';
+import AjouterFournituresPage from '@/features/fournitures/pages/AjouterFournituresPage';
+import ListeFournituresPage from '@/features/fournitures/pages/ListeFournituresPage';
 import ListeVehiculesPage from '@/features/vehicules-chauffeurs/pages/ListeVehiculesPage';
 import ListeChauffeursPage from '@/features/vehicules-chauffeurs/pages/ListeChauffeursPage';
 import ListeSallesPage from '@/features/salles/pages/ListeSallesPage';
@@ -51,6 +53,14 @@ export const router = createBrowserRouter([
         ],
       },
       { path: '/demandes/fournitures', element: <DemandeFournituresPage /> },
+      {
+        // Réception et stock des fournitures : logistique et administrateur
+        element: <RouteReservee autorise={peutGererReferentiels} />,
+        children: [
+          { path: '/fournitures/ajouter', element: <AjouterFournituresPage /> },
+          { path: '/fournitures/liste', element: <ListeFournituresPage /> },
+        ],
+      },
     ],
   },
   { path: '*', element: <Navigate to="/accueil" replace /> },

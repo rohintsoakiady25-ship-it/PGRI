@@ -1,16 +1,7 @@
-import { useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import DemandePage, { Champ, Section } from '@/components/demande/DemandePage';
+import { stockApi, type ArticleCatalogue } from '../api';
 import './DemandeFournituresPage.css';
-
-/** Article du catalogue du magasin (ArticleStock). */
-interface ArticleCatalogue {
-  id: string;
-  designation: string;
-  unite: string;
-}
-
-/** Catalogue du magasin : sera chargé depuis l'API avec le module fournitures (stock). */
-const CATALOGUE: ArticleCatalogue[] = [];
 
 interface Ligne {
   cle: number;
@@ -22,13 +13,28 @@ interface Ligne {
 /**
  * Demande de fournitures (rapport, section 4.1.4). Chaque ligne référence un article du catalogue
  * du magasin (ArticleStock) : l'unité vient de la fiche article et la remise met à jour le stock.
- * Formulaire de saisie seulement : l'envoi sera branché avec le module fournitures.
+ * Le catalogue vient du magasin (articles proposés aux demandeurs) ; l'envoi de la demande sera branché avec le circuit.
  */
 export default function DemandeFournituresPage() {
   const prochaine = useRef(1);
   const nouvelleLigne = (): Ligne => ({ cle: prochaine.current++, articleId: '', quantite: '', observations: '' });
   const [lignes, setLignes] = useState<Ligne[]>(() => [nouvelleLigne()]);
   const [focusCle, setFocusCle] = useState<number | null>(null);
+  const [catalogue, setCatalogue] = useState<ArticleCatalogue[] | null>(null);
+
+  useEffect(() => {
+    stockApi.catalogue().then(setCatalogue).catch(() => setCatalogue([]));
+  }, []);
+
+  // Articles regroupés par catégorie pour la liste déroulante
+  const groupes = useMemo(() => {
+    const parCategorie = new Map<string, ArticleCatalogue[]>();
+    for (const a of catalogue ?? []) {
+      const c = a.categorie ?? 'Autres';
+      parCategorie.set(c, [...(parCategorie.get(c) ?? []), a]);
+    }
+    return [...parCategorie.entries()];
+  }, [catalogue]);
 
   const maj = (cle: number, champ: keyof Omit<Ligne, 'cle'>, valeur: string) =>
     setLignes((l) => l.map((x) => (x.cle === cle ? { ...x, [champ]: valeur } : x)));
@@ -70,7 +76,7 @@ export default function DemandeFournituresPage() {
             </thead>
             <tbody>
               {lignes.map((l, i) => {
-                const article = CATALOGUE.find((a) => a.id === l.articleId);
+                const article = catalogue?.find((a) => a.id === l.articleId);
                 return (
                   <tr key={l.cle}>
                     <td data-label="Article">
@@ -83,13 +89,25 @@ export default function DemandeFournituresPage() {
                         onChange={(e) => maj(l.cle, 'articleId', e.target.value)}
                       >
                         <option value="" disabled>
-                          {CATALOGUE.length ? 'Choisir un article' : 'Catalogue du magasin à venir'}
+                          {catalogue === null ? 'Chargement du catalogue…' : catalogue.length ? 'Choisir un article' : 'Catalogue du magasin vide'}
                         </option>
-                        {CATALOGUE.map((a) => (
-                          <option key={a.id} value={a.id}>
-                            {a.designation}
-                          </option>
-                        ))}
+                        {groupes.map(([categorie, articles]) =>
+                          groupes.length > 1 ? (
+                            <optgroup key={categorie} label={categorie}>
+                              {articles.map((a) => (
+                                <option key={a.id} value={a.id}>
+                                  {a.designation}
+                                </option>
+                              ))}
+                            </optgroup>
+                          ) : (
+                            articles.map((a) => (
+                              <option key={a.id} value={a.id}>
+                                {a.designation}
+                              </option>
+                            ))
+                          ),
+                        )}
                       </select>
                     </td>
                     <td data-label="Unité" className="lignes__unite">

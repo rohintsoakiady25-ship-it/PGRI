@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
-import { Link } from 'react-router-dom';
 import AppLayout from '@/layouts/AppLayout';
 import { Champ, Section } from '@/components/demande/DemandePage';
 import '@/components/liste/ListePage.css';
@@ -102,11 +101,6 @@ export default function AjouterFournituresPage() {
     <AppLayout>
       <div className="demande">
         <h1 className="demande__title">Ajouter des fournitures</h1>
-        <p className="demande__intro">
-          Enregistrez les fournitures reçues au magasin : une ligne par article. Un article déjà au catalogue voit son stock
-          augmenter ; une nouvelle désignation crée l’article. Le stock se consulte dans{' '}
-          <Link to="/fournitures/liste">Liste des fournitures</Link>.
-        </p>
         {succes && (
           <p className="liste__bandeau" role="status">
             {succes}

@@ -36,7 +36,6 @@ export default function ListeFournituresPage() {
     <>
       <ListePage
         titre="Liste des fournitures"
-        intro="Articles du catalogue du magasin et leur stock. Le stock augmente avec les réceptions (« Ajouter des fournitures ») et diminue à la remise des demandes ; un article est signalé « Stock bas » quand il atteint son seuil d’alerte."
         placeholderRecherche="Rechercher par référence, désignation ou fournisseur"
         recherche={recherche}
         onRecherche={setRecherche}

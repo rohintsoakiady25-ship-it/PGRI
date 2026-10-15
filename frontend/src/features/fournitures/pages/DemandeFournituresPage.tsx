@@ -53,7 +53,6 @@ export default function DemandeFournituresPage() {
   return (
     <DemandePage
       titre="Demande de fournitures"
-      intro="Ajoutez une ligne par article. Les articles sont choisis dans le catalogue du magasin."
       circuit={[
         { titre: 'Votre supérieur direct (N+1)', detail: 'Valide ou refuse la demande.' },
         { titre: 'Responsable logistique', detail: 'Valide la demande avant transmission au magasin.' },

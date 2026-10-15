@@ -54,7 +54,6 @@ export default function DemandeDeplacementPage() {
   return (
     <DemandePage
       titre="Demande de déplacement"
-      intro="Décrivez votre besoin. Le véhicule et le chauffeur sont choisis par le responsable logistique après validation."
       circuit={[
         { titre: 'Votre supérieur direct (N+1)', detail: 'Valide ou refuse la demande.' },
         { titre: 'Responsable logistique', detail: 'Valide et affecte un véhicule et un chauffeur.' },

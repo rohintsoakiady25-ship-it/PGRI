@@ -35,7 +35,6 @@ export default function EquipementsPage() {
     <>
       <ListePage
         titre="Équipements"
-        intro="Matériel des salles de réunion, un appareil par référence (VP-01, VP-02…). Un appareil est installé dans une seule salle ou partagé entre plusieurs ; une fois réservé, il est indisponible sur ce créneau dans toutes les salles."
         placeholderRecherche="Rechercher par référence ou par nom"
         recherche={recherche}
         onRecherche={setRecherche}

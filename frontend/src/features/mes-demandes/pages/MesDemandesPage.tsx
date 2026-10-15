@@ -26,7 +26,6 @@ export default function MesDemandesPage() {
     <>
       <ListePage
         titre="Mes demandes"
-        intro="Suivez vos réservations de salle : statut, décision du responsable logistique et commentaires."
         bandeau={message}
         placeholderRecherche="Rechercher par référence, objet ou salle"
         recherche={recherche}

@@ -20,7 +20,6 @@ export interface LigneListe {
 
 interface ListePageProps {
   titre: string;
-  intro: string;
   placeholderRecherche: string;
   recherche: string;
   onRecherche: (texte: string) => void;
@@ -41,7 +40,7 @@ interface ListePageProps {
 
 /** Gabarit des pages de liste : recherche, filtres, tableau, chargement, erreur, état vide. */
 export default function ListePage({
-  titre, intro, placeholderRecherche, recherche, onRecherche, filtres = [], colonnes, lignes, chargement, erreur,
+  titre, placeholderRecherche, recherche, onRecherche, filtres = [], colonnes, lignes, chargement, erreur,
   messageVide, total, action, bandeau,
 }: ListePageProps) {
   const filtreActif = Boolean(recherche.trim()) || filtres.some((f) => f.valeur);
@@ -56,7 +55,6 @@ export default function ListePage({
         <div className="liste__entete">
           <div>
             <h1 className="liste__titre">{titre}</h1>
-            <p className="liste__intro">{intro}</p>
           </div>
           {action}
         </div>

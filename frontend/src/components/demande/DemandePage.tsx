@@ -9,7 +9,6 @@ export interface EtapeCircuit {
 
 interface DemandePageProps {
   titre: string;
-  intro: string;
   circuit: EtapeCircuit[];
   noteCircuit?: string;
   /** Soumission réelle ; sans elle, la page reste une maquette. */
@@ -23,13 +22,12 @@ interface DemandePageProps {
 
 /** Gabarit commun des pages de demande : formulaire à gauche, circuit de validation à droite. */
 export default function DemandePage({
-  titre, intro, circuit, noteCircuit, onSoumettre, envoi, erreur, brouillon = true, children,
+  titre, circuit, noteCircuit, onSoumettre, envoi, erreur, brouillon = true, children,
 }: DemandePageProps) {
   return (
     <AppLayout>
       <div className="demande">
         <h1 className="demande__title">{titre}</h1>
-        <p className="demande__intro">{intro}</p>
 
         <div className="demande__grid">
           <form className="demande__form" noValidate onSubmit={onSoumettre ?? ((e) => e.preventDefault())}>

@@ -43,7 +43,6 @@ export default function ListeChauffeursPage() {
     <>
       <ListePage
         titre="Liste des chauffeurs"
-        intro="Chauffeurs de MNP affectables aux déplacements de service par le responsable logistique."
         placeholderRecherche="Rechercher par nom, matricule ou téléphone"
         recherche={recherche}
         onRecherche={setRecherche}

@@ -123,7 +123,6 @@ export default function DemandeSallePage() {
   return (
     <DemandePage
       titre="Réservation de salle"
-      intro="Choisissez une salle et un créneau libres. En cas de conflit, une autre salle ou un autre créneau vous est proposé."
       circuit={[{ titre: 'Responsable logistique', detail: 'Valide ou refuse la réservation.' }]}
       noteCircuit="Votre N+1 et l'assistante de direction peuvent consulter la demande et la commenter."
       onSoumettre={soumettre}

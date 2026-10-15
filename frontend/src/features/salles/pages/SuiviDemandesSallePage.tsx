@@ -35,11 +35,6 @@ export default function SuiviDemandesSallePage() {
     <>
       <ListePage
         titre="Demandes de salle"
-        intro={
-          logistique
-            ? `Validez ou refusez les réservations. ${enAttente > 0 ? `${enAttente} demande${enAttente > 1 ? 's' : ''} en attente.` : 'Aucune demande en attente.'}`
-            : 'Réservations de vos collaborateurs ou de votre direction : consultez-les et donnez votre avis.'
-        }
         placeholderRecherche="Rechercher par référence, objet, salle ou demandeur"
         recherche={recherche}
         onRecherche={setRecherche}

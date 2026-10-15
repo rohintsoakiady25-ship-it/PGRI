@@ -48,7 +48,6 @@ export default function ListeVehiculesPage() {
     <>
       <ListePage
         titre="Liste des voitures"
-        intro="Véhicules de MNP disponibles pour les déplacements de service. Le responsable logistique les affecte aux missions validées."
         placeholderRecherche="Rechercher par immatriculation ou modèle"
         recherche={recherche}
         onRecherche={setRecherche}

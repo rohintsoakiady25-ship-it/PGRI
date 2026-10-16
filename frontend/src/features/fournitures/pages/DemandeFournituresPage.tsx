@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import DemandePage, { Champ, Section } from '@/components/demande/DemandePage';
 import { stockApi, type ArticleCatalogue } from '../api';
+import RechercheArticle from '../components/RechercheArticle';
 import './DemandeFournituresPage.css';
 
 interface Ligne {
@@ -25,16 +26,6 @@ export default function DemandeFournituresPage() {
   useEffect(() => {
     stockApi.catalogue().then(setCatalogue).catch(() => setCatalogue([]));
   }, []);
-
-  // Articles regroupés par catégorie pour la liste déroulante
-  const groupes = useMemo(() => {
-    const parCategorie = new Map<string, ArticleCatalogue[]>();
-    for (const a of catalogue ?? []) {
-      const c = a.categorie ?? 'Autres';
-      parCategorie.set(c, [...(parCategorie.get(c) ?? []), a]);
-    }
-    return [...parCategorie.entries()];
-  }, [catalogue]);
 
   const maj = (cle: number, champ: keyof Omit<Ligne, 'cle'>, valeur: string) =>
     setLignes((l) => l.map((x) => (x.cle === cle ? { ...x, [champ]: valeur } : x)));
@@ -79,38 +70,17 @@ export default function DemandeFournituresPage() {
                 return (
                   <tr key={l.cle}>
                     <td data-label="Article">
-                      <select
-                        name="article"
-                        aria-label={`Article ${i + 1}`}
-                        required
-                        value={l.articleId}
+                      <RechercheArticle
+                        catalogue={catalogue}
+                        articleId={l.articleId}
+                        onChoisir={(id) => maj(l.cle, 'articleId', id)}
+                        ariaLabel={`Article ${i + 1}`}
                         autoFocus={focusCle === l.cle}
-                        onChange={(e) => maj(l.cle, 'articleId', e.target.value)}
-                      >
-                        <option value="" disabled>
-                          {catalogue === null ? 'Chargement du catalogue…' : catalogue.length ? 'Choisir un article' : 'Catalogue du magasin vide'}
-                        </option>
-                        {groupes.map(([categorie, articles]) =>
-                          groupes.length > 1 ? (
-                            <optgroup key={categorie} label={categorie}>
-                              {articles.map((a) => (
-                                <option key={a.id} value={a.id}>
-                                  {a.designation}
-                                </option>
-                              ))}
-                            </optgroup>
-                          ) : (
-                            articles.map((a) => (
-                              <option key={a.id} value={a.id}>
-                                {a.designation}
-                              </option>
-                            ))
-                          ),
-                        )}
-                      </select>
+                      />
                     </td>
                     <td data-label="Unité" className="lignes__unite">
-                      <input type="text" aria-label={`Unité de l’article ${i + 1}`} value={article?.unite ?? '—'} readOnly />
+                      {/* Unité reprise de la fiche article : hors du parcours au clavier */}
+                      <input type="text" aria-label={`Unité de l’article ${i + 1}`} value={article?.unite ?? '—'} readOnly tabIndex={-1} />
                     </td>
                     <td data-label="Quantité" className="lignes__qte">
                       <input

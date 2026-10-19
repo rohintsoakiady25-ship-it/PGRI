@@ -5,9 +5,10 @@ export enum EtatTechnique {
   EN_REPARATION = 'EN_REPARATION',
 }
 
-/** Disponibilité calculée (les missions en cours seront prises en compte avec les affectations). */
+/** Disponibilité calculée à partir de l'état et des missions affectées. */
 export enum Disponibilite {
   DISPONIBLE = 'DISPONIBLE',
+  EN_MISSION = 'EN_MISSION',
   INDISPONIBLE = 'INDISPONIBLE',
   HORS_SERVICE = 'HORS_SERVICE',
 }

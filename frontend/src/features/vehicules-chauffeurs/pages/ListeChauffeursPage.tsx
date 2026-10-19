@@ -1,15 +1,14 @@
 import { useMemo, useState } from 'react';
 import ListePage from '@/components/liste/ListePage';
-import Badge, { type TonBadge } from '@/components/common/Badge';
 import Modale from '@/components/common/Modale';
 import { useAuth } from '@/auth/AuthContext';
 import { peutGererReferentiels } from '@/auth/droits';
+import CelluleDisponibilite from '../components/CelluleDisponibilite';
 import { chauffeursApi, LIBELLE_DISPONIBILITE, type Chauffeur, type Disponibilite } from '../api';
 import { normaliser, useListe } from '@/hooks/useListe';
 import FormulaireChauffeur from '../components/FormulaireChauffeur';
 import ConfirmerSuppression from '@/components/common/ConfirmerSuppression';
 
-const TON_DISPO: Record<Disponibilite, TonBadge> = { DISPONIBLE: 'succes', INDISPONIBLE: 'attention', HORS_SERVICE: 'neutre' };
 
 /** Liste des chauffeurs (entité Chauffeur, Figure 3). */
 export default function ListeChauffeursPage() {
@@ -48,7 +47,7 @@ export default function ListeChauffeursPage() {
         onRecherche={setRecherche}
         filtres={[
           { id: 'dispo', label: 'Disponibilité', valeur: dispo, onChange: setDispo,
-            options: (['DISPONIBLE', 'HORS_SERVICE'] as Disponibilite[]).map((k) => ({ valeur: k, libelle: LIBELLE_DISPONIBILITE[k] })) },
+            options: (['DISPONIBLE', 'EN_MISSION', 'HORS_SERVICE'] as Disponibilite[]).map((k) => ({ valeur: k, libelle: LIBELLE_DISPONIBILITE[k] })) },
         ]}
         colonnes={colonnes}
         lignes={visibles.map((c) => ({
@@ -59,7 +58,7 @@ export default function ListeChauffeursPage() {
             c.matricule,
             c.telephone ? <a key="t" href={`tel:${c.telephone.replace(/\s/g, '')}`}>{c.telephone}</a> : '—',
             c.numeroPermis ?? '—',
-            <Badge key="d" ton={TON_DISPO[c.disponibilite]}>{LIBELLE_DISPONIBILITE[c.disponibilite]}</Badge>,
+            <CelluleDisponibilite key="d" disponibilite={c.disponibilite} mission={c.mission} prochaineMission={c.prochaineMission} />,
             ...(gestion
               ? [
                   <span key="a" className="liste__actions-ligne">

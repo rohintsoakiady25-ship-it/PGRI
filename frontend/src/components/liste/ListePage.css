@@ -39,6 +39,11 @@
   gap: 0.125rem;
 }
 
+/* Cellule courte qui ne doit pas passer à la ligne (pastille + précision) */
+.liste__sans-retour {
+  white-space: nowrap;
+}
+
 .liste__actions-ligne {
   text-align: right;
   white-space: nowrap;

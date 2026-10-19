@@ -10,11 +10,11 @@ import {
 } from '../api';
 import { normaliser, useListe } from '@/hooks/useListe';
 import FormulaireVehicule from '../components/FormulaireVehicule';
+import CelluleDisponibilite from '../components/CelluleDisponibilite';
 import ConfirmerSuppression from '@/components/common/ConfirmerSuppression';
 import './ListeVehiculesPage.css';
 
 const TON_ETAT: Record<EtatTechnique, TonBadge> = { BON: 'succes', A_SURVEILLER: 'attention', EN_REPARATION: 'danger' };
-const TON_DISPO: Record<Disponibilite, TonBadge> = { DISPONIBLE: 'succes', INDISPONIBLE: 'attention', HORS_SERVICE: 'neutre' };
 const TON_ECHEANCE: Record<Echeance, TonBadge> = { EXPIREE: 'danger', BIENTOT: 'attention', VALIDE: 'succes', NON_RENSEIGNEE: 'neutre' };
 const aSurveiller = (fin: string | null) => ['EXPIREE', 'BIENTOT'].includes(echeance(fin));
 
@@ -98,7 +98,7 @@ export default function ListeVehiculesPage() {
             <CelluleEcheance key="as" debut={v.assuranceDebut} fin={v.assuranceFin} />,
             <CelluleEcheance key="vt" debut={v.visiteTechniqueDebut} fin={v.visiteTechniqueFin} />,
             <Badge key="e" ton={TON_ETAT[v.etatTechnique]}>{LIBELLE_ETAT[v.etatTechnique]}</Badge>,
-            <Badge key="d" ton={TON_DISPO[v.disponibilite]}>{LIBELLE_DISPONIBILITE[v.disponibilite]}</Badge>,
+            <CelluleDisponibilite key="d" disponibilite={v.disponibilite} motif={v.motif} mission={v.mission} prochaineMission={v.prochaineMission} />,
             ...(gestion
               ? [
                   <span key="a" className="liste__actions-ligne">

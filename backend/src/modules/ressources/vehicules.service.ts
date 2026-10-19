@@ -2,20 +2,40 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Disponibilite, EtatTechnique } from '../../common/enums/etat-technique.enum';
+import { MissionResume, Occupation, occupations } from '../deplacements/occupations';
 import { Vehicule } from './entities/vehicule.entity';
 import { FiltreVehiculesDto, VehiculeDto } from './dto/vehicule.dto';
 
-export type VehiculeAvecDisponibilite = Vehicule & { disponibilite: Disponibilite };
+const FUSEAU = 'Indian/Antananarivo';
+const aujourdhui = () => new Intl.DateTimeFormat('fr-CA', { timeZone: FUSEAU }).format(new Date()); // AAAA-MM-JJ
+
+export type VehiculeAvecDisponibilite = Vehicule & {
+  disponibilite: Disponibilite;
+  /** Raison d'une indisponibilité (réparation, assurance ou visite expirée). */
+  motif: string | null;
+  mission: MissionResume | null;
+  prochaineMission: MissionResume | null;
+};
 
 @Injectable()
 export class VehiculesService {
   constructor(@InjectRepository(Vehicule) private readonly depot: Repository<Vehicule>) {}
 
-  /** Disponibilité calculée ; les missions en cours s'ajouteront avec les affectations. */
-  private disponibilite(v: Vehicule): Disponibilite {
-    if (!v.actif) return Disponibilite.HORS_SERVICE;
-    if (v.etatTechnique === EtatTechnique.EN_REPARATION) return Disponibilite.INDISPONIBLE;
-    return Disponibilite.DISPONIBLE;
+  /** Disponibilité aujourd'hui : hors service, en mission, indisponible (avec le motif) ou disponible. */
+  private avecDisponibilite(v: Vehicule, o: Occupation | undefined): VehiculeAvecDisponibilite {
+    const jour = aujourdhui();
+    let disponibilite = Disponibilite.DISPONIBLE;
+    let motif: string | null = null;
+    if (!v.actif) disponibilite = Disponibilite.HORS_SERVICE;
+    else if (o?.actuelle) disponibilite = Disponibilite.EN_MISSION;
+    else if (v.etatTechnique === EtatTechnique.EN_REPARATION) [disponibilite, motif] = [Disponibilite.INDISPONIBLE, 'En réparation'];
+    else if (v.assuranceFin && v.assuranceFin < jour) [disponibilite, motif] = [Disponibilite.INDISPONIBLE, 'Assurance expirée'];
+    else if (v.visiteTechniqueFin && v.visiteTechniqueFin < jour) [disponibilite, motif] = [Disponibilite.INDISPONIBLE, 'Visite technique expirée'];
+    return { ...v, disponibilite, motif, mission: o?.actuelle ?? null, prochaineMission: o?.prochaine ?? null };
+  }
+
+  private async unSeul(v: Vehicule): Promise<VehiculeAvecDisponibilite> {
+    return this.avecDisponibilite(v, (await occupations(this.depot.manager, 'vehiculeId')).get(v.id));
   }
 
   async lister(filtres: FiltreVehiculesDto): Promise<VehiculeAvecDisponibilite[]> {
@@ -24,15 +44,15 @@ export class VehiculesService {
       qb.andWhere('(v.immatriculation ILIKE :q OR v.marqueModele ILIKE :q)', { q: `%${filtres.q.trim()}%` });
     }
     if (filtres.etat) qb.andWhere('v.etatTechnique = :etat', { etat: filtres.etat });
-    const vehicules = await qb.getMany();
-    return vehicules.map((v) => ({ ...v, disponibilite: this.disponibilite(v) }));
+    const [vehicules, occ] = await Promise.all([qb.getMany(), occupations(this.depot.manager, 'vehiculeId')]);
+    return vehicules.map((v) => this.avecDisponibilite(v, occ.get(v.id)));
   }
 
   async creer(dto: VehiculeDto): Promise<VehiculeAvecDisponibilite> {
     await this.verifierImmatriculationLibre(dto.immatriculation);
     const v = this.depot.create({ ...this.valeurs(dto), actif: dto.actif ?? true });
     const enregistre = await this.depot.save(v);
-    return { ...enregistre, disponibilite: this.disponibilite(enregistre) };
+    return this.unSeul(enregistre);
   }
 
   async modifier(id: string, dto: VehiculeDto): Promise<VehiculeAvecDisponibilite> {
@@ -41,7 +61,7 @@ export class VehiculesService {
     if (dto.immatriculation !== v.immatriculation) await this.verifierImmatriculationLibre(dto.immatriculation);
     Object.assign(v, this.valeurs(dto), { actif: dto.actif ?? v.actif });
     const enregistre = await this.depot.save(v);
-    return { ...enregistre, disponibilite: this.disponibilite(enregistre) };
+    return this.unSeul(enregistre);
   }
 
   /** Suppression définitive (l'administrateur peut aussi le mettre hors service sans le supprimer). */

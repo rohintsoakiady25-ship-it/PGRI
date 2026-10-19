@@ -1,7 +1,15 @@
 import { api } from '@/api/client';
 
 export type EtatTechnique = 'BON' | 'A_SURVEILLER' | 'EN_REPARATION';
-export type Disponibilite = 'DISPONIBLE' | 'INDISPONIBLE' | 'HORS_SERVICE';
+export type Disponibilite = 'DISPONIBLE' | 'EN_MISSION' | 'INDISPONIBLE' | 'HORS_SERVICE';
+
+/** Mission en cours ou à venir d'un véhicule ou d'un chauffeur. */
+export interface MissionResume {
+  debut: string;
+  fin: string;
+  references: string[];
+  destinations: string[];
+}
 
 export interface Vehicule {
   id: string;
@@ -17,6 +25,10 @@ export interface Vehicule {
   visiteTechniqueFin: string | null;
   actif: boolean;
   disponibilite: Disponibilite;
+  /** Raison d'une indisponibilité (réparation, assurance ou visite expirée). */
+  motif: string | null;
+  mission: MissionResume | null;
+  prochaineMission: MissionResume | null;
 }
 
 export type VehiculeSaisie = Pick<
@@ -59,6 +71,8 @@ export interface Chauffeur {
   numeroPermis: string | null;
   actif: boolean;
   disponibilite: Disponibilite;
+  mission: MissionResume | null;
+  prochaineMission: MissionResume | null;
 }
 
 export type ChauffeurSaisie = Pick<Chauffeur, 'nomComplet' | 'matricule' | 'telephone' | 'numeroPermis' | 'actif'>;
@@ -71,6 +85,7 @@ export const LIBELLE_ETAT: Record<EtatTechnique, string> = {
 
 export const LIBELLE_DISPONIBILITE: Record<Disponibilite, string> = {
   DISPONIBLE: 'Disponible',
+  EN_MISSION: 'En mission',
   INDISPONIBLE: 'Indisponible',
   HORS_SERVICE: 'Hors service',
 };

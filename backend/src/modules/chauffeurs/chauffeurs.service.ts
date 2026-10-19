@@ -2,18 +2,24 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Disponibilite } from '../../common/enums/etat-technique.enum';
+import { MissionResume, Occupation, occupations } from '../deplacements/occupations';
 import { Chauffeur } from './entities/chauffeur.entity';
 import { ChauffeurDto, FiltreChauffeursDto } from './dto/chauffeur.dto';
 
-export type ChauffeurAvecDisponibilite = Chauffeur & { disponibilite: Disponibilite };
+export type ChauffeurAvecDisponibilite = Chauffeur & {
+  disponibilite: Disponibilite;
+  mission: MissionResume | null;
+  prochaineMission: MissionResume | null;
+};
 
 @Injectable()
 export class ChauffeursService {
   constructor(@InjectRepository(Chauffeur) private readonly depot: Repository<Chauffeur>) {}
 
-  /** Disponibilité calculée ; les missions en cours s'ajouteront avec les affectations. */
-  private avecDisponibilite(c: Chauffeur): ChauffeurAvecDisponibilite {
-    return { ...c, disponibilite: c.actif ? Disponibilite.DISPONIBLE : Disponibilite.HORS_SERVICE };
+  /** Disponibilité aujourd'hui : hors service, en mission ou disponible. */
+  private avecDisponibilite(c: Chauffeur, o?: Occupation): ChauffeurAvecDisponibilite {
+    const disponibilite = !c.actif ? Disponibilite.HORS_SERVICE : o?.actuelle ? Disponibilite.EN_MISSION : Disponibilite.DISPONIBLE;
+    return { ...c, disponibilite, mission: o?.actuelle ?? null, prochaineMission: o?.prochaine ?? null };
   }
 
   async lister(filtres: FiltreChauffeursDto): Promise<ChauffeurAvecDisponibilite[]> {
@@ -21,7 +27,8 @@ export class ChauffeursService {
     if (filtres.q?.trim()) {
       qb.andWhere('(c.nomComplet ILIKE :q OR c.matricule ILIKE :q OR c.telephone ILIKE :q OR c.numeroPermis ILIKE :q)', { q: `%${filtres.q.trim()}%` });
     }
-    return (await qb.getMany()).map((c) => this.avecDisponibilite(c));
+    const [chauffeurs, occ] = await Promise.all([qb.getMany(), occupations(this.depot.manager, 'chauffeurId')]);
+    return chauffeurs.map((c) => this.avecDisponibilite(c, occ.get(c.id)));
   }
 
   async creer(dto: ChauffeurDto): Promise<ChauffeurAvecDisponibilite> {

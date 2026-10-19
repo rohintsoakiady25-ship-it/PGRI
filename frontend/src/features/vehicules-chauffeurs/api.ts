@@ -7,15 +7,49 @@ export interface Vehicule {
   id: string;
   nom: string;
   immatriculation: string;
-  marqueModele: string;
-  nbPlaces: number;
-  kilometrage: number;
+  marqueModele: string | null;
+  nbPlaces: number | null;
   etatTechnique: EtatTechnique;
+  /** Périodes « AAAA-MM-JJ » (null : non renseignée). */
+  assuranceDebut: string | null;
+  assuranceFin: string | null;
+  visiteTechniqueDebut: string | null;
+  visiteTechniqueFin: string | null;
   actif: boolean;
   disponibilite: Disponibilite;
 }
 
-export type VehiculeSaisie = Pick<Vehicule, 'immatriculation' | 'marqueModele' | 'nbPlaces' | 'kilometrage' | 'etatTechnique' | 'actif'>;
+export type VehiculeSaisie = Pick<
+  Vehicule,
+  | 'immatriculation' | 'marqueModele' | 'nbPlaces' | 'etatTechnique' | 'actif'
+  | 'assuranceDebut' | 'assuranceFin' | 'visiteTechniqueDebut' | 'visiteTechniqueFin'
+>;
+
+/** Échéance d'une assurance ou d'une visite technique, par rapport à aujourd'hui. */
+export type Echeance = 'EXPIREE' | 'BIENTOT' | 'VALIDE' | 'NON_RENSEIGNEE';
+
+/** Délai d'alerte avant l'échéance. */
+export const JOURS_ALERTE = 30;
+
+export function echeance(fin: string | null, aujourdhui = new Date()): Echeance {
+  if (!fin) return 'NON_RENSEIGNEE';
+  const jour = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const auj = jour(aujourdhui);
+  if (fin < auj) return 'EXPIREE';
+  const limite = new Date(aujourdhui);
+  limite.setDate(limite.getDate() + JOURS_ALERTE);
+  return fin <= jour(limite) ? 'BIENTOT' : 'VALIDE';
+}
+
+export const LIBELLE_ECHEANCE: Record<Echeance, string> = {
+  EXPIREE: 'Expirée',
+  BIENTOT: 'À renouveler',
+  VALIDE: 'Valide',
+  NON_RENSEIGNEE: 'Non renseignée',
+};
+
+/** « 2026-10-25 » devient « 25/10/2026 ». */
+export const dateCourte = (iso: string) => iso.split('-').reverse().join('/');
 
 export interface Chauffeur {
   id: string;

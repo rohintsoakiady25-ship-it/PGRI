@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Disponibilite, EtatTechnique } from '../../common/enums/etat-technique.enum';
@@ -30,7 +30,7 @@ export class VehiculesService {
 
   async creer(dto: VehiculeDto): Promise<VehiculeAvecDisponibilite> {
     await this.verifierImmatriculationLibre(dto.immatriculation);
-    const v = this.depot.create({ ...dto, nom: `${dto.marqueModele} — ${dto.immatriculation}`, actif: dto.actif ?? true });
+    const v = this.depot.create({ ...this.valeurs(dto), actif: dto.actif ?? true });
     const enregistre = await this.depot.save(v);
     return { ...enregistre, disponibilite: this.disponibilite(enregistre) };
   }
@@ -39,7 +39,7 @@ export class VehiculesService {
     const v = await this.depot.findOne({ where: { id } });
     if (!v) throw new NotFoundException('Véhicule introuvable.');
     if (dto.immatriculation !== v.immatriculation) await this.verifierImmatriculationLibre(dto.immatriculation);
-    Object.assign(v, dto, { nom: `${dto.marqueModele} — ${dto.immatriculation}`, actif: dto.actif ?? v.actif });
+    Object.assign(v, this.valeurs(dto), { actif: dto.actif ?? v.actif });
     const enregistre = await this.depot.save(v);
     return { ...enregistre, disponibilite: this.disponibilite(enregistre) };
   }
@@ -49,6 +49,27 @@ export class VehiculesService {
     const v = await this.depot.findOne({ where: { id } });
     if (!v) throw new NotFoundException('Véhicule introuvable.');
     await this.depot.remove(v);
+  }
+
+  /** Valeurs enregistrées : champs facultatifs à null, périodes vérifiées, libellé recalculé. */
+  private valeurs(dto: VehiculeDto) {
+    const periode = (debut: string | null | undefined, fin: string | null | undefined, quoi: string) => {
+      if (debut && fin && fin < debut) throw new BadRequestException(`La fin de ${quoi} est antérieure à son début.`);
+      return [debut ?? null, fin ?? null] as const;
+    };
+    const [assuranceDebut, assuranceFin] = periode(dto.assuranceDebut, dto.assuranceFin, "l'assurance");
+    const [visiteTechniqueDebut, visiteTechniqueFin] = periode(dto.visiteTechniqueDebut, dto.visiteTechniqueFin, 'la visite technique');
+    return {
+      immatriculation: dto.immatriculation,
+      marqueModele: dto.marqueModele ?? null,
+      nbPlaces: dto.nbPlaces ?? null,
+      etatTechnique: dto.etatTechnique,
+      assuranceDebut,
+      assuranceFin,
+      visiteTechniqueDebut,
+      visiteTechniqueFin,
+      nom: dto.marqueModele ? `${dto.marqueModele} — ${dto.immatriculation}` : dto.immatriculation,
+    };
   }
 
   private async verifierImmatriculationLibre(immatriculation: string) {

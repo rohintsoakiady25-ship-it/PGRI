@@ -1,0 +1,13 @@
+/* Assurance et visite technique : pastille d'état, date d'échéance en dessous */
+.echeance {
+  display: inline-grid;
+  justify-items: start;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+/* Modèle, avec le nombre de places en dessous */
+.vehicule-modele {
+  display: grid;
+  gap: 0.125rem;
+}

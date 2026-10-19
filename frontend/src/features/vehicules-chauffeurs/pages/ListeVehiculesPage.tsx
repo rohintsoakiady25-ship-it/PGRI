@@ -4,14 +4,31 @@ import Badge, { type TonBadge } from '@/components/common/Badge';
 import Modale from '@/components/common/Modale';
 import { useAuth } from '@/auth/AuthContext';
 import { peutGererReferentiels } from '@/auth/droits';
-import { LIBELLE_DISPONIBILITE, LIBELLE_ETAT, vehiculesApi, type Disponibilite, type EtatTechnique, type Vehicule } from '../api';
+import {
+  dateCourte, echeance, LIBELLE_DISPONIBILITE, LIBELLE_ECHEANCE, LIBELLE_ETAT, vehiculesApi,
+  type Disponibilite, type Echeance, type EtatTechnique, type Vehicule,
+} from '../api';
 import { normaliser, useListe } from '@/hooks/useListe';
 import FormulaireVehicule from '../components/FormulaireVehicule';
 import ConfirmerSuppression from '@/components/common/ConfirmerSuppression';
+import './ListeVehiculesPage.css';
 
 const TON_ETAT: Record<EtatTechnique, TonBadge> = { BON: 'succes', A_SURVEILLER: 'attention', EN_REPARATION: 'danger' };
 const TON_DISPO: Record<Disponibilite, TonBadge> = { DISPONIBLE: 'succes', INDISPONIBLE: 'attention', HORS_SERVICE: 'neutre' };
-const nombre = (n: number) => n.toLocaleString('fr-FR');
+const TON_ECHEANCE: Record<Echeance, TonBadge> = { EXPIREE: 'danger', BIENTOT: 'attention', VALIDE: 'succes', NON_RENSEIGNEE: 'neutre' };
+const aSurveiller = (fin: string | null) => ['EXPIREE', 'BIENTOT'].includes(echeance(fin));
+
+/** Assurance ou visite technique : état de l'échéance et date de fin. */
+function CelluleEcheance({ debut, fin }: { debut: string | null; fin: string | null }) {
+  const e = echeance(fin);
+  return (
+    <span className="echeance" title={debut && fin ? `Du ${dateCourte(debut)} au ${dateCourte(fin)}` : undefined}>
+      <Badge ton={TON_ECHEANCE[e]}>{LIBELLE_ECHEANCE[e]}</Badge>
+      {fin && <span className="liste__discret">jusqu’au {dateCourte(fin)}</span>}
+      {!fin && debut && <span className="liste__discret">depuis le {dateCourte(debut)}</span>}
+    </span>
+  );
+}
 
 /** Liste des voitures (entité Vehicule, Figure 3). */
 export default function ListeVehiculesPage() {
@@ -21,6 +38,7 @@ export default function ListeVehiculesPage() {
   const [recherche, setRecherche] = useState('');
   const [etat, setEtat] = useState('');
   const [dispo, setDispo] = useState('');
+  const [echeances, setEcheances] = useState('');
   const [edition, setEdition] = useState<Vehicule | 'nouveau' | null>(null);
   const [aSupprimer, setASupprimer] = useState<Vehicule | null>(null);
 
@@ -28,17 +46,21 @@ export default function ListeVehiculesPage() {
     const q = normaliser(recherche.trim());
     return elements.filter(
       (v) =>
-        (!q || normaliser(`${v.immatriculation} ${v.marqueModele}`).includes(q)) &&
+        (!q || normaliser(`${v.immatriculation} ${v.marqueModele ?? ''}`).includes(q)) &&
         (!etat || v.etatTechnique === etat) &&
-        (!dispo || v.disponibilite === dispo),
+        (!dispo || v.disponibilite === dispo) &&
+        (!echeances ||
+          (echeances === 'ASSURANCE' && aSurveiller(v.assuranceFin)) ||
+          (echeances === 'VISITE' && aSurveiller(v.visiteTechniqueFin)) ||
+          (echeances === 'MANQUANTE' && (!v.assuranceFin || !v.visiteTechniqueFin))),
     );
-  }, [elements, recherche, etat, dispo]);
+  }, [elements, recherche, etat, dispo, echeances]);
 
   const colonnes = [
     { label: 'Immatriculation' },
-    { label: 'Marque et modèle' },
-    { label: 'Places', numerique: true },
-    { label: 'Kilométrage', numerique: true },
+    { label: 'Modèle' },
+    { label: 'Assurance' },
+    { label: 'Visite technique' },
     { label: 'État technique' },
     { label: 'Disponibilité' },
     ...(gestion ? [{ label: 'Actions', sr: true }] : []),
@@ -56,6 +78,12 @@ export default function ListeVehiculesPage() {
             options: (Object.keys(LIBELLE_ETAT) as EtatTechnique[]).map((k) => ({ valeur: k, libelle: LIBELLE_ETAT[k] })) },
           { id: 'dispo', label: 'Disponibilité', valeur: dispo, onChange: setDispo,
             options: (Object.keys(LIBELLE_DISPONIBILITE) as Disponibilite[]).map((k) => ({ valeur: k, libelle: LIBELLE_DISPONIBILITE[k] })) },
+          { id: 'echeances', label: 'Échéances', valeur: echeances, onChange: setEcheances,
+            options: [
+              { valeur: 'ASSURANCE', libelle: 'Assurance expirée ou à renouveler' },
+              { valeur: 'VISITE', libelle: 'Visite expirée ou à renouveler' },
+              { valeur: 'MANQUANTE', libelle: 'Dates manquantes' },
+            ] },
         ]}
         colonnes={colonnes}
         lignes={visibles.map((v) => ({
@@ -63,9 +91,12 @@ export default function ListeVehiculesPage() {
           attenuee: !v.actif,
           cellules: [
             <strong key="i">{v.immatriculation}</strong>,
-            v.marqueModele,
-            v.nbPlaces,
-            `${nombre(v.kilometrage)} km`,
+            <span key="m" className="vehicule-modele">
+              {v.marqueModele ?? '—'}
+              {v.nbPlaces && <span className="liste__discret">{v.nbPlaces} places</span>}
+            </span>,
+            <CelluleEcheance key="as" debut={v.assuranceDebut} fin={v.assuranceFin} />,
+            <CelluleEcheance key="vt" debut={v.visiteTechniqueDebut} fin={v.visiteTechniqueFin} />,
             <Badge key="e" ton={TON_ETAT[v.etatTechnique]}>{LIBELLE_ETAT[v.etatTechnique]}</Badge>,
             <Badge key="d" ton={TON_DISPO[v.disponibilite]}>{LIBELLE_DISPONIBILITE[v.disponibilite]}</Badge>,
             ...(gestion

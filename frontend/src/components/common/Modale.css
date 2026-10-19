@@ -159,6 +159,18 @@
   padding: 0;
 }
 
+/* Période début / fin côte à côte (une sous l'autre sur mobile) */
+.formulaire__periode {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 0.5rem 1rem;
+}
+
+.formulaire__periode label {
+  display: grid;
+  gap: 0.25rem;
+}
+
 .formulaire__choix {
   display: flex;
   flex-wrap: wrap;

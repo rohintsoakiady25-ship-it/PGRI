@@ -54,19 +54,25 @@ CREATE TABLE IF NOT EXISTS vehicule (
     cree_le             timestamp with time zone NOT NULL DEFAULT now(),
     modifie_le          timestamp with time zone NOT NULL DEFAULT now(),
     immatriculation     varchar(20)              NOT NULL,             -- en majuscules, ex. « 1234 TBA »
-    marque_modele       varchar(100)             NOT NULL,
-    nb_places           smallint                 NOT NULL,
-    kilometrage         integer                  NOT NULL DEFAULT 0,
+    marque_modele       varchar(100),                                  -- facultatif
+    nb_places           smallint,                                      -- facultatif
     etat_technique      varchar(20)              NOT NULL DEFAULT 'BON',
+    assurance_debut     date,
+    assurance_fin       date,
+    visite_technique_debut date,
+    visite_technique_fin   date,
     CONSTRAINT pk_vehicule PRIMARY KEY (id),
     CONSTRAINT uq_vehicule_immatriculation UNIQUE (immatriculation),
     CONSTRAINT ck_vehicule_etat CHECK (etat_technique IN ('BON', 'A_SURVEILLER', 'EN_REPARATION')),
     CONSTRAINT ck_vehicule_places CHECK (nb_places BETWEEN 1 AND 60),
-    CONSTRAINT ck_vehicule_kilometrage CHECK (kilometrage >= 0)
+    CONSTRAINT ck_vehicule_assurance CHECK (assurance_fin >= assurance_debut),
+    CONSTRAINT ck_vehicule_visite CHECK (visite_technique_fin >= visite_technique_debut)
 );
 
 COMMENT ON TABLE  vehicule                IS 'Véhicules de MNP affectables aux déplacements de service';
 COMMENT ON COLUMN vehicule.etat_technique IS 'BON, A_SURVEILLER ou EN_REPARATION';
+COMMENT ON COLUMN vehicule.assurance_fin IS 'Échéance de l''assurance ; à renouveler avant cette date';
+COMMENT ON COLUMN vehicule.visite_technique_fin IS 'Échéance de la visite technique';
 
 -- ---------------------------------------------------------------------
 -- Chauffeurs (personnes affectées aux missions, distinctes de Ressource)

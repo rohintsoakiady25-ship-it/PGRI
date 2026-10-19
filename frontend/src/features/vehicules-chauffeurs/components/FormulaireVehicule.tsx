@@ -13,9 +13,12 @@ export default function FormulaireVehicule({ vehicule, onEnregistre, onAnnuler }
   const [valeurs, setValeurs] = useState({
     immatriculation: vehicule?.immatriculation ?? '',
     marqueModele: vehicule?.marqueModele ?? '',
-    nbPlaces: String(vehicule?.nbPlaces ?? 5),
-    kilometrage: String(vehicule?.kilometrage ?? 0),
+    nbPlaces: vehicule ? String(vehicule.nbPlaces ?? '') : '5',
     etatTechnique: vehicule?.etatTechnique ?? ('BON' as EtatTechnique),
+    assuranceDebut: vehicule?.assuranceDebut ?? '',
+    assuranceFin: vehicule?.assuranceFin ?? '',
+    visiteTechniqueDebut: vehicule?.visiteTechniqueDebut ?? '',
+    visiteTechniqueFin: vehicule?.visiteTechniqueFin ?? '',
     actif: vehicule?.actif ?? true,
   });
   const [erreur, setErreur] = useState<string | null>(null);
@@ -25,13 +28,22 @@ export default function FormulaireVehicule({ vehicule, onEnregistre, onAnnuler }
   async function soumettre(e: FormEvent) {
     e.preventDefault();
     setErreur(null);
+    if (valeurs.assuranceDebut && valeurs.assuranceFin && valeurs.assuranceFin < valeurs.assuranceDebut) {
+      return setErreur("La fin de l'assurance est antérieure à son début.");
+    }
+    if (valeurs.visiteTechniqueDebut && valeurs.visiteTechniqueFin && valeurs.visiteTechniqueFin < valeurs.visiteTechniqueDebut) {
+      return setErreur('La fin de la visite technique est antérieure à son début.');
+    }
     setEnvoi(true);
     const saisie: VehiculeSaisie = {
       immatriculation: valeurs.immatriculation,
-      marqueModele: valeurs.marqueModele,
-      nbPlaces: Number(valeurs.nbPlaces),
-      kilometrage: Number(valeurs.kilometrage),
+      marqueModele: valeurs.marqueModele.trim() || null,
+      nbPlaces: valeurs.nbPlaces.trim() ? Number(valeurs.nbPlaces) : null,
       etatTechnique: valeurs.etatTechnique,
+      assuranceDebut: valeurs.assuranceDebut || null,
+      assuranceFin: valeurs.assuranceFin || null,
+      visiteTechniqueDebut: valeurs.visiteTechniqueDebut || null,
+      visiteTechniqueFin: valeurs.visiteTechniqueFin || null,
       actif: valeurs.actif,
     };
     try {
@@ -56,19 +68,18 @@ export default function FormulaireVehicule({ vehicule, onEnregistre, onAnnuler }
           onChange={(e) => maj('immatriculation', e.target.value)} />
       </div>
       <div className="formulaire__champ">
-        <label htmlFor="v-modele">Marque et modèle</label>
-        <input id="v-modele" required placeholder="Toyota Land Cruiser" value={valeurs.marqueModele}
+        <label htmlFor="v-modele">
+          Marque et modèle <span className="formulaire__facultatif">(facultatif)</span>
+        </label>
+        <input id="v-modele" placeholder="Toyota Land Cruiser" value={valeurs.marqueModele}
           onChange={(e) => maj('marqueModele', e.target.value)} />
       </div>
       <div className="formulaire__champ">
-        <label htmlFor="v-places">Nombre de places</label>
-        <input id="v-places" type="number" min={1} max={60} required value={valeurs.nbPlaces}
+        <label htmlFor="v-places">
+          Nombre de places <span className="formulaire__facultatif">(facultatif)</span>
+        </label>
+        <input id="v-places" type="number" min={1} max={60} value={valeurs.nbPlaces}
           onChange={(e) => maj('nbPlaces', e.target.value)} />
-      </div>
-      <div className="formulaire__champ">
-        <label htmlFor="v-km">Kilométrage</label>
-        <input id="v-km" type="number" min={0} step={1} required value={valeurs.kilometrage}
-          onChange={(e) => maj('kilometrage', e.target.value)} />
       </div>
       <div className="formulaire__champ">
         <label htmlFor="v-etat">État technique</label>
@@ -80,6 +91,36 @@ export default function FormulaireVehicule({ vehicule, onEnregistre, onAnnuler }
           ))}
         </select>
       </div>
+      <fieldset className="formulaire__champ formulaire__champ--large formulaire__groupe">
+        <legend className="formulaire__libelle">Assurance</legend>
+        <div className="formulaire__periode">
+          <label>
+            <span className="formulaire__facultatif">Début</span>
+            <input type="date" aria-label="Début de l'assurance" value={valeurs.assuranceDebut}
+              onChange={(e) => maj('assuranceDebut', e.target.value)} />
+          </label>
+          <label>
+            <span className="formulaire__facultatif">Fin (échéance)</span>
+            <input type="date" aria-label="Fin de l'assurance" min={valeurs.assuranceDebut || undefined} value={valeurs.assuranceFin}
+              onChange={(e) => maj('assuranceFin', e.target.value)} />
+          </label>
+        </div>
+      </fieldset>
+      <fieldset className="formulaire__champ formulaire__champ--large formulaire__groupe">
+        <legend className="formulaire__libelle">Visite technique</legend>
+        <div className="formulaire__periode">
+          <label>
+            <span className="formulaire__facultatif">Début</span>
+            <input type="date" aria-label="Début de la visite technique" value={valeurs.visiteTechniqueDebut}
+              onChange={(e) => maj('visiteTechniqueDebut', e.target.value)} />
+          </label>
+          <label>
+            <span className="formulaire__facultatif">Fin (échéance)</span>
+            <input type="date" aria-label="Fin de la visite technique" min={valeurs.visiteTechniqueDebut || undefined}
+              value={valeurs.visiteTechniqueFin} onChange={(e) => maj('visiteTechniqueFin', e.target.value)} />
+          </label>
+        </div>
+      </fieldset>
       {vehicule && (
         <div className="formulaire__champ">
           <span className="formulaire__libelle">Service</span>

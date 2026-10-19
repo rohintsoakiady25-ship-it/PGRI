@@ -33,6 +33,12 @@
   font-size: 0.8125rem;
 }
 
+/* Cellule sur deux lignes : valeur principale, précision discrète en dessous */
+.liste__empile {
+  display: grid;
+  gap: 0.125rem;
+}
+
 .liste__actions-ligne {
   text-align: right;
   white-space: nowrap;

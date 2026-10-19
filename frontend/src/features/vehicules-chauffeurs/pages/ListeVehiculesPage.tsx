@@ -91,7 +91,7 @@ export default function ListeVehiculesPage() {
           attenuee: !v.actif,
           cellules: [
             <strong key="i">{v.immatriculation}</strong>,
-            <span key="m" className="vehicule-modele">
+            <span key="m" className="liste__empile">
               {v.marqueModele ?? '—'}
               {v.nbPlaces && <span className="liste__discret">{v.nbPlaces} places</span>}
             </span>,

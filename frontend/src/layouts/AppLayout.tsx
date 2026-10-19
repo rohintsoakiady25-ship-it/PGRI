@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, type Utilisateur } from '@/auth/AuthContext';
-import { peutGererReferentiels, peutSuivreSalles } from '@/auth/droits';
+import { peutGererReferentiels, peutSuivreDeplacements, peutSuivreSalles } from '@/auth/droits';
 import logoMnp from '@/assets/logo-mnp.png';
 import BoutonTheme from '@/theme/BoutonTheme';
 import {
@@ -31,6 +31,7 @@ const menu: { titre: string | null; liens: LienMenu[] }[] = [
         icone: <IconVehicule />,
         enfants: [
           { to: '/demandes/deplacement', label: 'Demande', icone: <IconNouvelleDemande /> },
+          { to: '/deplacements/demandes', label: 'Demandes à valider', icone: <IconMesDemandes />, visible: peutSuivreDeplacements },
           { to: '/deplacements/vehicules', label: 'Liste des voitures', icone: <IconVehicule taille={18} />, visible: peutGererReferentiels },
           { to: '/deplacements/chauffeurs', label: 'Liste des chauffeurs', icone: <IconChauffeur />, visible: peutGererReferentiels },
         ],

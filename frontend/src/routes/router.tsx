@@ -1,10 +1,11 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import RouteProtegee from '@/auth/RouteProtegee';
 import RouteReservee from '@/auth/RouteReservee';
-import { peutGererReferentiels, peutSuivreSalles } from '@/auth/droits';
+import { peutGererReferentiels, peutSuivreDeplacements, peutSuivreSalles } from '@/auth/droits';
 import LoginPage from '@/features/auth/pages/LoginPage';
 import AccueilPage from '@/features/accueil/pages/AccueilPage';
 import DemandeDeplacementPage from '@/features/deplacements/pages/DemandeDeplacementPage';
+import SuiviDemandesDeplacementPage from '@/features/deplacements/pages/SuiviDemandesDeplacementPage';
 import DemandeSallePage from '@/features/salles/pages/DemandeSallePage';
 import DemandeFournituresPage from '@/features/fournitures/pages/DemandeFournituresPage';
 import AjouterFournituresPage from '@/features/fournitures/pages/AjouterFournituresPage';
@@ -30,6 +31,11 @@ export const router = createBrowserRouter([
       { path: '/accueil', element: <AccueilPage /> },
       { path: '/mes-demandes', element: <MesDemandesPage /> },
       { path: '/demandes/deplacement', element: <DemandeDeplacementPage /> },
+      {
+        // Demandes de déplacement à suivre : N+1 (validation), assistante de direction, logistique
+        element: <RouteReservee autorise={peutSuivreDeplacements} />,
+        children: [{ path: '/deplacements/demandes', element: <SuiviDemandesDeplacementPage /> }],
+      },
       {
         // Listes des voitures et des chauffeurs : logistique et administrateur seulement
         element: <RouteReservee autorise={peutGererReferentiels} />,

@@ -121,7 +121,7 @@ export default function ListePage({
         {!chargement && !erreur && (
           <p className="liste__compte" aria-live="polite">
             {filtreActif ? `${lignes.length} sur ${total} ` : `${total} `}
-            résultat{(filtreActif ? lignes.length : total) > 1 ? 's' : ''}
+            résultat{total > 1 ? 's' : ''}{/* « 0 sur 4 résultats » : accord avec le total */}
           </p>
         )}
       </div>

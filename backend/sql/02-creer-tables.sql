@@ -139,13 +139,40 @@ CREATE INDEX IF NOT EXISTS ix_equipement_salle_salle ON equipement_salle (salle_
 COMMENT ON COLUMN equipement.plusieurs_salles IS 'false : installé dans une seule salle ; true : utilisable dans plusieurs salles';
 
 -- ---------------------------------------------------------------------
+-- Affectations : un véhicule et un chauffeur sur une période, pour une ou plusieurs demandes de déplacement
+-- (conflit contrôlé par l'API : deux affectations actives du même véhicule ou chauffeur qui se chevauchent)
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS affectation (
+    id                  uuid                     NOT NULL DEFAULT uuid_generate_v4(),
+    vehicule_id         uuid                     NOT NULL,
+    chauffeur_id        uuid                     NOT NULL,
+    date_heure_debut    timestamp with time zone NOT NULL,
+    date_heure_fin      timestamp with time zone NOT NULL,
+    statut              varchar(12)              NOT NULL DEFAULT 'PREVUE', -- PREVUE, EN_COURS, TERMINEE, ANNULEE
+    heure_depart_reelle timestamp with time zone,
+    heure_retour_reelle timestamp with time zone,
+    incidents           text,
+    affecte_par_id      uuid                     NOT NULL,
+    cree_le             timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT pk_affectation PRIMARY KEY (id),
+    CONSTRAINT fk_affectation_vehicule FOREIGN KEY (vehicule_id) REFERENCES vehicule (id),
+    CONSTRAINT fk_affectation_chauffeur FOREIGN KEY (chauffeur_id) REFERENCES chauffeur (id),
+    CONSTRAINT fk_affectation_affecte_par FOREIGN KEY (affecte_par_id) REFERENCES utilisateur (id),
+    CONSTRAINT ck_affectation_periode CHECK (date_heure_fin > date_heure_debut),
+    CONSTRAINT ck_affectation_statut CHECK (statut IN ('PREVUE', 'EN_COURS', 'TERMINEE', 'ANNULEE'))
+);
+
+CREATE INDEX IF NOT EXISTS ix_affectation_vehicule ON affectation (vehicule_id);
+CREATE INDEX IF NOT EXISTS ix_affectation_chauffeur ON affectation (chauffeur_id);
+
+-- ---------------------------------------------------------------------
 -- Demandes (Demande > DemandeSalle, DemandeDeplacement, DemandeFourniture)
 -- Héritage « table unique » : une seule table, la colonne « type » indique
 -- le sous-type ; les colonnes propres à un sous-type sont facultatives.
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS demande (
     id                  uuid                     NOT NULL DEFAULT uuid_generate_v4(),
-    reference           varchar(20)              NOT NULL,             -- ex. SAL-2026-0001
+    reference           varchar(20)              NOT NULL,             -- ex. SAL-2026-0001, DEP-2026-0001
     type                varchar(20)              NOT NULL,             -- DEPLACEMENT, SALLE ou FOURNITURE
     statut              varchar(30)              NOT NULL DEFAULT 'BROUILLON',
     demandeur_id        uuid                     NOT NULL,
@@ -160,16 +187,33 @@ CREATE TABLE IF NOT EXISTS demande (
     nb_participants     smallint,
     equipements_souhaites text,                                        -- liste séparée par des virgules
     participants        text,
+    -- DemandeDeplacement (section 4.1.2)
+    type_deplacement    varchar(10),                                   -- VILLE ou MISSION
+    motif               text,
+    lieu_depart         varchar(200),
+    depart_latitude     double precision,
+    depart_longitude    double precision,
+    destination         varchar(200),
+    destination_latitude  double precision,
+    destination_longitude double precision,
+    itineraire_retenu   text,                                          -- polyligne encodée du tracé choisi
+    distance_estimee_km double precision,
+    date_heure_depart   timestamp with time zone,
+    date_heure_retour_prevue timestamp with time zone,
+    duree_mission_jours smallint,                                      -- mission seulement
+    personnes_concernees text,
+    affectation_id      uuid,                                          -- véhicule et chauffeur affectés
     CONSTRAINT pk_demande PRIMARY KEY (id),
     CONSTRAINT uq_demande_reference UNIQUE (reference),
     CONSTRAINT fk_demande_demandeur FOREIGN KEY (demandeur_id) REFERENCES utilisateur (id),
-    CONSTRAINT fk_demande_salle FOREIGN KEY (salle_id) REFERENCES salle (id)
+    CONSTRAINT fk_demande_salle FOREIGN KEY (salle_id) REFERENCES salle (id),
+    CONSTRAINT fk_demande_affectation FOREIGN KEY (affectation_id) REFERENCES affectation (id) ON DELETE SET NULL
 );
 
 CREATE INDEX IF NOT EXISTS ix_demande_type ON demande (type);
 
 COMMENT ON TABLE  demande        IS 'Demandes des trois modules (héritage table unique)';
-COMMENT ON COLUMN demande.statut IS 'Voir Figure 7 : EN_ATTENTE_LOGISTIQUE, CONFIRMEE, REFUSEE, ANNULEE, LIBEREE, TERMINEE…';
+COMMENT ON COLUMN demande.statut IS 'Voir Figure 7 : EN_ATTENTE_N1, EN_ATTENTE_LOGISTIQUE, CONFIRMEE, VALIDEE, REFUSEE, ANNULEE, LIBEREE, TERMINEE…';
 
 -- Décisions des validateurs (niveau N1 ou LOGISTIQUE)
 CREATE TABLE IF NOT EXISTS validation (

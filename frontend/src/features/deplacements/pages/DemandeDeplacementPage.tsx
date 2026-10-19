@@ -1,9 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { messageErreur } from '@/api/client';
 import DemandePage, { Champ, Section } from '@/components/demande/DemandePage';
 import CarteMadagascar from '@/components/carte/CarteMadagascar';
 import ChampLieu from '@/components/carte/ChampLieu';
 import { nommerPoint, type Lieu } from '@/components/carte/lieux';
 import { calculerItineraires, formaterDuree, type Itineraire } from '@/components/carte/itineraire';
+import { demandesDeplacementApi, periode, type TypeDeplacement } from '../api';
 import './DemandeDeplacementPage.css';
 
 type Cible = 'depart' | 'destination';
@@ -11,7 +14,15 @@ type EtatItineraire = 'attente' | 'calcul' | 'ok' | 'introuvable' | 'erreur';
 
 const km = (n: number) => n.toLocaleString('fr-FR', { maximumFractionDigits: 1 });
 
-/** Demande de déplacement (champs : rapport, section 4.1.2). Envoi non branché. */
+/** Nombre de jours calendaires couverts, départ et retour compris (pour pré-remplir la durée d'une mission). */
+function joursCouverts(depart: string, retour: string): number | null {
+  if (!depart || !retour) return null;
+  const jour = (v: string) => new Date(`${v.slice(0, 10)}T00:00:00`).getTime();
+  const n = Math.round((jour(retour) - jour(depart)) / 86_400_000) + 1;
+  return n >= 1 ? n : null;
+}
+
+/** Demande de déplacement (champs : rapport, section 4.1.2). Après l'envoi : « Mes demandes ». */
 export default function DemandeDeplacementPage() {
   const [depart, setDepart] = useState<Lieu | null>(null);
   const [destination, setDestination] = useState<Lieu | null>(null);
@@ -20,6 +31,23 @@ export default function DemandeDeplacementPage() {
   const [itineraires, setItineraires] = useState<Itineraire[]>([]);
   const [choix, setChoix] = useState(0);
   const [etat, setEtat] = useState<EtatItineraire>('attente');
+  const navigate = useNavigate();
+  const [type, setType] = useState<TypeDeplacement>('VILLE');
+  const [motif, setMotif] = useState('');
+  const [dateDepart, setDateDepart] = useState('');
+  const [dateRetour, setDateRetour] = useState('');
+  const [duree, setDuree] = useState('');
+  const [dureeSaisie, setDureeSaisie] = useState(false);
+  const [personnes, setPersonnes] = useState('');
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [envoi, setEnvoi] = useState(false);
+
+  // Mission : la durée suit les dates tant que le demandeur ne l'a pas modifiée lui-même
+  useEffect(() => {
+    if (dureeSaisie) return;
+    const n = joursCouverts(dateDepart, dateRetour);
+    setDuree(n ? String(n) : '');
+  }, [dateDepart, dateRetour, dureeSaisie]);
 
   // Itinéraires routiers dès que le départ et la destination sont connus
   useEffect(() => {
@@ -51,6 +79,46 @@ export default function DemandeDeplacementPage() {
     setNommage(false);
   }
 
+  async function soumettre(e: FormEvent) {
+    e.preventDefault();
+    setErreur(null);
+    if (motif.trim().length < 5) return setErreur('Précisez le motif du déplacement.');
+    if (!depart || !destination) return setErreur('Choisissez le lieu de départ et la destination (dans la liste ou sur la carte).');
+    if (!dateDepart || !dateRetour) return setErreur('Indiquez la date et l’heure de départ et de retour.');
+    if (new Date(dateRetour) <= new Date(dateDepart)) return setErreur('Le retour doit être après le départ.');
+    if (type === 'VILLE' && dateDepart.slice(0, 10) !== dateRetour.slice(0, 10)) {
+      return setErreur('Un déplacement en ville se fait dans la journée : choisissez « Mission » pour plusieurs jours.');
+    }
+    if (type === 'MISSION' && !(Number(duree) >= 1)) return setErreur('Indiquez la durée de la mission en jours.');
+    setEnvoi(true);
+    try {
+      const d = await demandesDeplacementApi.soumettre({
+        typeDeplacement: type,
+        motif,
+        lieuDepart: depart.nom,
+        departLatitude: depart.lat,
+        departLongitude: depart.lon,
+        destination: destination.nom,
+        destinationLatitude: destination.lat,
+        destinationLongitude: destination.lon,
+        itineraireRetenu: retenu?.polyline ?? null,
+        distanceEstimeeKm: retenu ? Math.round(retenu.distanceKm * 10) / 10 : null,
+        dateHeureDepart: new Date(dateDepart).toISOString(),
+        dateHeureRetourPrevue: new Date(dateRetour).toISOString(),
+        dureeMissionJours: type === 'MISSION' ? Number(duree) : null,
+        personnesConcernees: type === 'MISSION' ? personnes.trim() || null : null,
+      });
+      const suite = d.statut === 'EN_ATTENTE_N1' ? 'Votre supérieur direct va l’examiner.' : 'Le responsable logistique va l’examiner.';
+      navigate('/mes-demandes', {
+        state: { message: `Demande ${d.reference} envoyée : ${d.lieuDepart} → ${d.destination}, ${periode(d.dateHeureDepart, d.dateHeureRetourPrevue)}. ${suite}` },
+      });
+    } catch (err) {
+      setErreur(messageErreur(err, 'La demande n’a pas pu être envoyée.'));
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
   return (
     <DemandePage
       titre="Demande de déplacement"
@@ -59,19 +127,24 @@ export default function DemandeDeplacementPage() {
         { titre: 'Responsable logistique', detail: 'Valide et affecte un véhicule et un chauffeur.' },
       ]}
       noteCircuit="L'assistante de direction est informée de votre demande."
+      onSoumettre={soumettre}
+      envoi={envoi}
+      erreur={erreur}
+      brouillon={false}
     >
       <Section titre="Type de déplacement">
         <div className="champ champ--large">
           <div className="choix" role="radiogroup" aria-label="Type de déplacement">
             <label className="choix__option">
-              <input type="radio" name="typeDeplacement" value="VILLE" defaultChecked />
+              <input type="radio" name="typeDeplacement" value="VILLE" checked={type === 'VILLE'} onChange={() => setType('VILLE')} />
               <span className="choix__text">
                 <span className="choix__title">Déplacement en ville</span>
                 <span className="choix__detail">Aller-retour dans la journée</span>
               </span>
             </label>
             <label className="choix__option">
-              <input type="radio" name="typeDeplacement" value="MISSION" id="type-mission" />
+              <input type="radio" name="typeDeplacement" value="MISSION" id="type-mission" checked={type === 'MISSION'}
+                onChange={() => setType('MISSION')} />
               <span className="choix__text">
                 <span className="choix__title">Mission (province)</span>
                 <span className="choix__detail">Sur plusieurs jours</span>
@@ -83,7 +156,8 @@ export default function DemandeDeplacementPage() {
 
       <Section titre="Trajet">
         <Champ id="motif" label="Motif du déplacement" large>
-          <textarea id="motif" name="motif" placeholder="Ex. réunion avec la direction régionale" />
+          <textarea id="motif" name="motif" maxLength={500} placeholder="Ex. réunion avec la direction régionale" value={motif}
+            onChange={(e) => setMotif(e.target.value)} />
         </Champ>
         <Champ id="lieuDepart" label="Lieu de départ">
           <ChampLieu id="lieuDepart" name="lieuDepart" valeur={depart} onChange={setDepart} placeholder="Rechercher un lieu" positionActuelle />
@@ -172,21 +246,27 @@ export default function DemandeDeplacementPage() {
 
       <Section titre="Dates">
         <Champ id="depart" label="Date et heure de départ">
-          <input id="depart" name="dateHeureDepart" type="datetime-local" />
+          <input id="depart" name="dateHeureDepart" type="datetime-local" value={dateDepart} onChange={(e) => setDateDepart(e.target.value)} />
         </Champ>
         <Champ id="retour" label="Date et heure de retour prévues">
-          <input id="retour" name="dateHeureRetourPrevue" type="datetime-local" />
+          <input id="retour" name="dateHeureRetourPrevue" type="datetime-local" min={dateDepart || undefined} value={dateRetour}
+            onChange={(e) => setDateRetour(e.target.value)} />
         </Champ>
       </Section>
 
       <div className="mission-seulement">
         <Section titre="Mission">
           <Champ id="duree" label="Durée de la mission (jours)">
-            <input id="duree" name="dureeMissionJours" type="number" min={1} />
+            <input id="duree" name="dureeMissionJours" type="number" min={1} max={90} value={duree}
+              onChange={(e) => {
+                setDureeSaisie(true);
+                setDuree(e.target.value);
+              }} />
           </Champ>
           <div />
           <Champ id="personnes" label="Personnes concernées" optionnel large>
-            <textarea id="personnes" name="personnesConcernees" placeholder="Une personne par ligne" />
+            <textarea id="personnes" name="personnesConcernees" maxLength={2000} placeholder="Une personne par ligne" value={personnes}
+              onChange={(e) => setPersonnes(e.target.value)} />
           </Champ>
         </Section>
       </div>

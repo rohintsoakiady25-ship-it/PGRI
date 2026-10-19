@@ -86,10 +86,10 @@ export default function DemandeDeplacementPage() {
           <textarea id="motif" name="motif" placeholder="Ex. réunion avec la direction régionale" />
         </Champ>
         <Champ id="lieuDepart" label="Lieu de départ">
-          <ChampLieu id="lieuDepart" name="lieuDepart" valeur={depart} onChange={setDepart} placeholder="Rechercher un lieu" />
+          <ChampLieu id="lieuDepart" name="lieuDepart" valeur={depart} onChange={setDepart} placeholder="Rechercher un lieu" positionActuelle />
         </Champ>
         <Champ id="destination" label="Destination">
-          <ChampLieu id="destination" name="destination" valeur={destination} onChange={setDestination} placeholder="Rechercher un lieu" />
+          <ChampLieu id="destination" name="destination" valeur={destination} onChange={setDestination} placeholder="Rechercher un lieu" positionActuelle />
         </Champ>
 
         <div className="champ champ--large">

@@ -49,3 +49,60 @@ export async function occupations(m: EntityManager, champ: 'vehiculeId' | 'chauf
   }
   return resultat;
 }
+
+/** Une mission dans la fiche d'un véhicule ou d'un chauffeur. */
+export interface MissionFiche {
+  id: string;
+  statut: StatutAffectation;
+  debut: Date;
+  fin: Date;
+  heureDepartReelle: Date | null;
+  heureRetourReelle: Date | null;
+  incidents: string | null;
+  vehicule: { immatriculation: string; marqueModele: string | null };
+  chauffeur: { nomComplet: string; telephone: string | null };
+  demandes: { id: string; reference: string; statut: string; demandeur: string; lieuDepart: string; destination: string; motif: string }[];
+}
+
+/**
+ * Fiche d'un véhicule ou d'un chauffeur : missions à venir (prévues ou en cours, de la plus proche
+ * à la plus lointaine) et historique (terminées ou annulées, de la plus récente à la plus ancienne).
+ */
+export async function missionsDe(m: EntityManager, champ: 'vehiculeId' | 'chauffeurId', id: string) {
+  const liste = await m
+    .getRepository(Affectation)
+    .createQueryBuilder('a')
+    .innerJoinAndSelect('a.vehicule', 'v')
+    .innerJoinAndSelect('a.chauffeur', 'c')
+    .leftJoinAndSelect('a.demandes', 'd')
+    .leftJoinAndSelect('d.demandeur', 'u')
+    .where(`a.${champ} = :id`, { id })
+    .orderBy('a.dateHeureDebut', 'ASC')
+    .getMany();
+  const vue = (a: Affectation): MissionFiche => ({
+    id: a.id,
+    statut: a.statut,
+    debut: a.dateHeureDebut,
+    fin: a.dateHeureFin,
+    heureDepartReelle: a.heureDepartReelle,
+    heureRetourReelle: a.heureRetourReelle,
+    incidents: a.incidents,
+    vehicule: { immatriculation: a.vehicule.immatriculation, marqueModele: a.vehicule.marqueModele },
+    chauffeur: { nomComplet: a.chauffeur.nomComplet, telephone: a.chauffeur.telephone },
+    demandes: (a.demandes ?? [])
+      .map((d) => ({
+        id: d.id,
+        reference: d.reference,
+        statut: d.statut,
+        demandeur: d.demandeur?.nomComplet ?? '—',
+        lieuDepart: d.lieuDepart,
+        destination: d.destination,
+        motif: d.motif,
+      }))
+      .sort((x, y) => x.reference.localeCompare(y.reference)),
+  });
+  return {
+    aVenir: liste.filter((a) => AFFECTATIONS_ACTIVES.includes(a.statut)).map(vue),
+    historique: liste.filter((a) => !AFFECTATIONS_ACTIVES.includes(a.statut)).reverse().map(vue),
+  };
+}

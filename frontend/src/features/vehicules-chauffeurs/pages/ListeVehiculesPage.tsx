@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import ListePage from '@/components/liste/ListePage';
 import Badge, { type TonBadge } from '@/components/common/Badge';
 import Modale from '@/components/common/Modale';
@@ -11,6 +11,7 @@ import {
 import { normaliser, useListe } from '@/hooks/useListe';
 import FormulaireVehicule from '../components/FormulaireVehicule';
 import CelluleDisponibilite from '../components/CelluleDisponibilite';
+import FicheMissions from '../components/FicheMissions';
 import ConfirmerSuppression from '@/components/common/ConfirmerSuppression';
 import './ListeVehiculesPage.css';
 
@@ -41,6 +42,8 @@ export default function ListeVehiculesPage() {
   const [echeances, setEcheances] = useState('');
   const [edition, setEdition] = useState<Vehicule | 'nouveau' | null>(null);
   const [aSupprimer, setASupprimer] = useState<Vehicule | null>(null);
+  const [fiche, setFiche] = useState<Vehicule | null>(null);
+  const chargerMissions = useCallback(() => vehiculesApi.missions(fiche!.id), [fiche]);
 
   const visibles = useMemo(() => {
     const q = normaliser(recherche.trim());
@@ -89,6 +92,8 @@ export default function ListeVehiculesPage() {
         lignes={visibles.map((v) => ({
           cle: v.id,
           attenuee: !v.actif,
+          onOuvrir: () => setFiche(v),
+          libelleOuvrir: `Voir les missions de ${v.immatriculation}`,
           cellules: [
             <strong key="i">{v.immatriculation}</strong>,
             <span key="m" className="liste__empile">
@@ -140,6 +145,10 @@ export default function ListeVehiculesPage() {
             recharger();
           }}
         />
+      </Modale>
+      <Modale ouverte={fiche !== null} titre={fiche ? `${fiche.immatriculation}${fiche.marqueModele ? ` · ${fiche.marqueModele}` : ''}` : ''}
+        onFermer={() => setFiche(null)} large>
+        {fiche && <FicheMissions cible="vehicule" charger={chargerMissions} />}
       </Modale>
       <Modale ouverte={aSupprimer !== null} titre="Supprimer le véhicule ?" onFermer={() => setASupprimer(null)}>
         {aSupprimer && (

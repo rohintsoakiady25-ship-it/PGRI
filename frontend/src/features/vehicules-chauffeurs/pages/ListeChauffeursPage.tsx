@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import ListePage from '@/components/liste/ListePage';
 import Modale from '@/components/common/Modale';
 import { useAuth } from '@/auth/AuthContext';
 import { peutGererReferentiels } from '@/auth/droits';
 import CelluleDisponibilite from '../components/CelluleDisponibilite';
+import FicheMissions from '../components/FicheMissions';
 import { chauffeursApi, LIBELLE_DISPONIBILITE, type Chauffeur, type Disponibilite } from '../api';
 import { normaliser, useListe } from '@/hooks/useListe';
 import FormulaireChauffeur from '../components/FormulaireChauffeur';
@@ -19,6 +20,8 @@ export default function ListeChauffeursPage() {
   const [dispo, setDispo] = useState('');
   const [edition, setEdition] = useState<Chauffeur | 'nouveau' | null>(null);
   const [aSupprimer, setASupprimer] = useState<Chauffeur | null>(null);
+  const [fiche, setFiche] = useState<Chauffeur | null>(null);
+  const chargerMissions = useCallback(() => chauffeursApi.missions(fiche!.id), [fiche]);
 
   const visibles = useMemo(() => {
     const q = normaliser(recherche.trim());
@@ -53,6 +56,8 @@ export default function ListeChauffeursPage() {
         lignes={visibles.map((c) => ({
           cle: c.id,
           attenuee: !c.actif,
+          onOuvrir: () => setFiche(c),
+          libelleOuvrir: `Voir les missions de ${c.nomComplet}`,
           cellules: [
             <strong key="n">{c.nomComplet}</strong>,
             c.matricule,
@@ -100,6 +105,9 @@ export default function ListeChauffeursPage() {
             recharger();
           }}
         />
+      </Modale>
+      <Modale ouverte={fiche !== null} titre={fiche ? `${fiche.nomComplet} · matricule ${fiche.matricule}` : ''} onFermer={() => setFiche(null)} large>
+        {fiche && <FicheMissions cible="chauffeur" charger={chargerMissions} />}
       </Modale>
       <Modale ouverte={aSupprimer !== null} titre="Supprimer le chauffeur ?" onFermer={() => setASupprimer(null)}>
         {aSupprimer && (

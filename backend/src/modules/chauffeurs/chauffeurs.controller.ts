@@ -18,6 +18,12 @@ export class ChauffeursController {
     return this.chauffeurs.lister(filtres);
   }
 
+  /** Missions à venir et historique des déplacements du chauffeur. */
+  @Get(':id/missions')
+  missions(@Param('id', ParseUUIDPipe) id: string) {
+    return this.chauffeurs.missions(id);
+  }
+
   @Post()
   creer(@Body() dto: ChauffeurDto) {
     return this.chauffeurs.creer(dto);

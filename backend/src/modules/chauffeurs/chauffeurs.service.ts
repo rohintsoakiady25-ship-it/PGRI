@@ -2,7 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Disponibilite } from '../../common/enums/etat-technique.enum';
-import { MissionResume, Occupation, occupations } from '../deplacements/occupations';
+import { MissionResume, missionsDe, Occupation, occupations } from '../deplacements/occupations';
 import { Chauffeur } from './entities/chauffeur.entity';
 import { ChauffeurDto, FiltreChauffeursDto } from './dto/chauffeur.dto';
 
@@ -48,9 +48,17 @@ export class ChauffeursService {
   }
 
   /** Suppression définitive (l'administrateur peut aussi le mettre hors service sans le supprimer). */
+  /** Missions à venir et historique des déplacements du chauffeur. */
+  async missions(id: string) {
+    if (!(await this.depot.exists({ where: { id } }))) throw new NotFoundException('Chauffeur introuvable.');
+    return missionsDe(this.depot.manager, 'chauffeurId', id);
+  }
+
   async supprimer(id: string): Promise<void> {
     const c = await this.depot.findOne({ where: { id } });
     if (!c) throw new NotFoundException('Chauffeur introuvable.');
+    const [{ n }] = await this.depot.query('SELECT count(*)::int AS n FROM affectation WHERE chauffeur_id = $1', [id]);
+    if (n > 0) throw new ConflictException(`${c.nomComplet} a déjà des missions : mettez-le hors service plutôt que de le supprimer.`);
     await this.depot.remove(c);
   }
 

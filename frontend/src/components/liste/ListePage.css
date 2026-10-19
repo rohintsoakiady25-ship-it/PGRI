@@ -203,3 +203,13 @@
   font-size: 0.8125rem;
   color: var(--ink-soft);
 }
+
+/* Ligne qui ouvre une fiche au clic */
+.liste__ligne--cliquable {
+  cursor: pointer;
+}
+
+.liste__ligne--cliquable:focus-visible {
+  outline: 3px solid var(--mnp-yellow);
+  outline-offset: -3px;
+}

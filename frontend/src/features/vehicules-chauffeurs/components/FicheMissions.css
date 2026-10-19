@@ -1,0 +1,72 @@
+/* Fiche d'un véhicule ou d'un chauffeur : missions à venir et historique */
+.fiche {
+  display: grid;
+  gap: 1.5rem;
+}
+
+.fiche__titre {
+  margin: 0 0 0.625rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.fiche__liste {
+  display: grid;
+  gap: 0.625rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fiche__mission {
+  padding: 0.75rem 0.875rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.fiche__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.25rem 0.75rem;
+  margin-bottom: 0.375rem;
+}
+
+.fiche__ligne {
+  margin: 0.25rem 0 0;
+  font-size: 0.9375rem;
+}
+
+.fiche__demandes {
+  margin: 0.375rem 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.9375rem;
+}
+
+.fiche__demandes li + li {
+  margin-top: 0.25rem;
+}
+
+.fiche__reference {
+  font-weight: 600;
+}
+
+.fiche__discret {
+  color: var(--ink-soft);
+  font-size: 0.8125rem;
+}
+
+.fiche__incident {
+  margin: 0.375rem 0 0;
+  font-size: 0.875rem;
+  color: var(--alert-text);
+}
+
+.fiche__vide {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}

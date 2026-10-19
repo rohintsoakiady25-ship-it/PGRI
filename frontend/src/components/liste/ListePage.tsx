@@ -16,6 +16,10 @@ export interface LigneListe {
   cellules: ReactNode[];
   /** Ligne grisée (ex. élément hors service). */
   attenuee?: boolean;
+  /** Clic sur la ligne (ou Entrée au clavier) : ouvre le détail. Les boutons de la ligne gardent leur action. */
+  onOuvrir?: () => void;
+  /** Nom accessible de la ligne cliquable, ex. « Voir la fiche de 2174 TV ». */
+  libelleOuvrir?: string;
 }
 
 interface ListePageProps {
@@ -105,7 +109,21 @@ export default function ListePage({
                 </tr>
               ) : (
                 lignes.map((ligne) => (
-                  <tr key={ligne.cle} className={ligne.attenuee ? 'liste__ligne--attenuee' : undefined}>
+                  <tr
+                    key={ligne.cle}
+                    className={[ligne.attenuee && 'liste__ligne--attenuee', ligne.onOuvrir && 'liste__ligne--cliquable'].filter(Boolean).join(' ') || undefined}
+                    {...(ligne.onOuvrir && {
+                      tabIndex: 0,
+                      'aria-label': ligne.libelleOuvrir,
+                      onClick: (e: React.MouseEvent) => {
+                        // Un clic sur un bouton ou un lien de la ligne garde son action propre
+                        if (!(e.target as HTMLElement).closest('button, a, input, select')) ligne.onOuvrir!();
+                      },
+                      onKeyDown: (e: React.KeyboardEvent) => {
+                        if (e.key === 'Enter' && e.target === e.currentTarget) ligne.onOuvrir!();
+                      },
+                    })}
+                  >
                     {ligne.cellules.map((cellule, j) => (
                       <td key={j} className={colonnes[j]?.numerique ? 'liste__num' : undefined}>
                         {cellule}

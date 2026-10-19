@@ -18,6 +18,12 @@ export class VehiculesController {
     return this.vehicules.lister(filtres);
   }
 
+  /** Missions à venir et historique des déplacements du véhicule. */
+  @Get(':id/missions')
+  missions(@Param('id', ParseUUIDPipe) id: string) {
+    return this.vehicules.missions(id);
+  }
+
   @Post()
   creer(@Body() dto: VehiculeDto) {
     return this.vehicules.creer(dto);

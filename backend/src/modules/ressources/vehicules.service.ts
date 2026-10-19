@@ -2,7 +2,7 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Disponibilite, EtatTechnique } from '../../common/enums/etat-technique.enum';
-import { MissionResume, Occupation, occupations } from '../deplacements/occupations';
+import { MissionResume, missionsDe, Occupation, occupations } from '../deplacements/occupations';
 import { Vehicule } from './entities/vehicule.entity';
 import { FiltreVehiculesDto, VehiculeDto } from './dto/vehicule.dto';
 
@@ -64,10 +64,18 @@ export class VehiculesService {
     return this.unSeul(enregistre);
   }
 
+  /** Missions à venir et historique des déplacements du véhicule. */
+  async missions(id: string) {
+    if (!(await this.depot.exists({ where: { id } }))) throw new NotFoundException('Véhicule introuvable.');
+    return missionsDe(this.depot.manager, 'vehiculeId', id);
+  }
+
   /** Suppression définitive (l'administrateur peut aussi le mettre hors service sans le supprimer). */
   async supprimer(id: string): Promise<void> {
     const v = await this.depot.findOne({ where: { id } });
     if (!v) throw new NotFoundException('Véhicule introuvable.');
+    const [{ n }] = await this.depot.query('SELECT count(*)::int AS n FROM affectation WHERE vehicule_id = $1', [id]);
+    if (n > 0) throw new ConflictException(`${v.immatriculation} a déjà des missions : mettez-le hors service plutôt que de le supprimer.`);
     await this.depot.remove(v);
   }
 

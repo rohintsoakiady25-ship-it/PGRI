@@ -90,11 +90,31 @@ export const LIBELLE_DISPONIBILITE: Record<Disponibilite, string> = {
   HORS_SERVICE: 'Hors service',
 };
 
+/** Une mission dans la fiche d'un véhicule ou d'un chauffeur. */
+export interface MissionFiche {
+  id: string;
+  statut: 'PREVUE' | 'EN_COURS' | 'TERMINEE' | 'ANNULEE';
+  debut: string;
+  fin: string;
+  heureDepartReelle: string | null;
+  heureRetourReelle: string | null;
+  incidents: string | null;
+  vehicule: { immatriculation: string; marqueModele: string | null };
+  chauffeur: { nomComplet: string; telephone: string | null };
+  demandes: { id: string; reference: string; statut: string; demandeur: string; lieuDepart: string; destination: string; motif: string }[];
+}
+
+export interface MissionsFiche {
+  aVenir: MissionFiche[];
+  historique: MissionFiche[];
+}
+
 export const vehiculesApi = {
   lister: () => api.get<Vehicule[]>('/vehicules').then((r) => r.data),
   creer: (v: VehiculeSaisie) => api.post<Vehicule>('/vehicules', v).then((r) => r.data),
   modifier: (id: string, v: VehiculeSaisie) => api.put<Vehicule>(`/vehicules/${id}`, v).then((r) => r.data),
   supprimer: (id: string) => api.delete(`/vehicules/${id}`).then(() => undefined),
+  missions: (id: string) => api.get<MissionsFiche>(`/vehicules/${id}/missions`).then((r) => r.data),
 };
 
 export const chauffeursApi = {
@@ -102,4 +122,5 @@ export const chauffeursApi = {
   creer: (c: ChauffeurSaisie) => api.post<Chauffeur>('/chauffeurs', c).then((r) => r.data),
   modifier: (id: string, c: ChauffeurSaisie) => api.put<Chauffeur>(`/chauffeurs/${id}`, c).then((r) => r.data),
   supprimer: (id: string) => api.delete(`/chauffeurs/${id}`).then(() => undefined),
+  missions: (id: string) => api.get<MissionsFiche>(`/chauffeurs/${id}/missions`).then((r) => r.data),
 };

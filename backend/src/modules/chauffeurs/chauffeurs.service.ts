@@ -2,7 +2,7 @@ import { ConflictException, Injectable, NotFoundException } from '@nestjs/common
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Disponibilite } from '../../common/enums/etat-technique.enum';
-import { MissionResume, missionsDe, Occupation, occupations } from '../deplacements/occupations';
+import { historiqueDe, MissionResume, missionsDe, Occupation, occupations } from '../deplacements/occupations';
 import { Chauffeur } from './entities/chauffeur.entity';
 import { ChauffeurDto, FiltreChauffeursDto } from './dto/chauffeur.dto';
 
@@ -52,6 +52,13 @@ export class ChauffeursService {
   async missions(id: string) {
     if (!(await this.depot.exists({ where: { id } }))) throw new NotFoundException('Chauffeur introuvable.');
     return missionsDe(this.depot.manager, 'chauffeurId', id);
+  }
+
+  /** Historique complet des déplacements du chauffeur. */
+  async historique(id: string) {
+    const v = await this.depot.findOne({ where: { id } });
+    if (!v) throw new NotFoundException('Chauffeur introuvable.');
+    return { chauffeur: { id: v.id, nomComplet: v.nomComplet, matricule: v.matricule }, missions: await historiqueDe(this.depot.manager, 'chauffeurId', id) };
   }
 
   async supprimer(id: string): Promise<void> {

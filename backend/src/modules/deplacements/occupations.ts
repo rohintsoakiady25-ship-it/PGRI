@@ -64,11 +64,29 @@ export interface MissionFiche {
   demandes: { id: string; reference: string; statut: string; demandeur: string; lieuDepart: string; destination: string; motif: string }[];
 }
 
+/** Nombre de missions passées montrées dans la fiche ; le reste est sur la page « Historique ». */
+export const HISTORIQUE_FICHE = 5;
+
 /**
  * Fiche d'un véhicule ou d'un chauffeur : missions à venir (prévues ou en cours, de la plus proche
- * à la plus lointaine) et historique (terminées ou annulées, de la plus récente à la plus ancienne).
+ * à la plus lointaine) et les dernières missions passées (de la plus récente à la plus ancienne).
  */
 export async function missionsDe(m: EntityManager, champ: 'vehiculeId' | 'chauffeurId', id: string) {
+  const toutes = await toutesLesMissions(m, champ, id);
+  const passees = toutes.filter((x) => !AFFECTATIONS_ACTIVES.includes(x.statut)).reverse();
+  return {
+    aVenir: toutes.filter((x) => AFFECTATIONS_ACTIVES.includes(x.statut)),
+    historique: passees.slice(0, HISTORIQUE_FICHE),
+    totalHistorique: passees.length,
+  };
+}
+
+/** Historique complet : toutes les missions terminées ou annulées, de la plus récente à la plus ancienne. */
+export async function historiqueDe(m: EntityManager, champ: 'vehiculeId' | 'chauffeurId', id: string) {
+  return (await toutesLesMissions(m, champ, id)).filter((x) => !AFFECTATIONS_ACTIVES.includes(x.statut)).reverse();
+}
+
+async function toutesLesMissions(m: EntityManager, champ: 'vehiculeId' | 'chauffeurId', id: string): Promise<MissionFiche[]> {
   const liste = await m
     .getRepository(Affectation)
     .createQueryBuilder('a')
@@ -101,8 +119,5 @@ export async function missionsDe(m: EntityManager, champ: 'vehiculeId' | 'chauff
       }))
       .sort((x, y) => x.reference.localeCompare(y.reference)),
   });
-  return {
-    aVenir: liste.filter((a) => AFFECTATIONS_ACTIVES.includes(a.statut)).map(vue),
-    historique: liste.filter((a) => !AFFECTATIONS_ACTIVES.includes(a.statut)).reverse().map(vue),
-  };
+  return liste.map(vue);
 }

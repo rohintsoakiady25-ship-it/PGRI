@@ -11,6 +11,7 @@
   font: inherit;
   font-size: 1rem;
   font-weight: 600;
+  text-decoration: none; /* un lien présenté comme un bouton n'est pas souligné */
   cursor: pointer;
   transition: background-color 150ms ease, border-color 150ms ease, transform 150ms ease;
 }

@@ -12,6 +12,7 @@ import AjouterFournituresPage from '@/features/fournitures/pages/AjouterFournitu
 import ListeFournituresPage from '@/features/fournitures/pages/ListeFournituresPage';
 import ListeVehiculesPage from '@/features/vehicules-chauffeurs/pages/ListeVehiculesPage';
 import ListeChauffeursPage from '@/features/vehicules-chauffeurs/pages/ListeChauffeursPage';
+import HistoriqueMissionsPage from '@/features/vehicules-chauffeurs/pages/HistoriqueMissionsPage';
 import ListeSallesPage from '@/features/salles/pages/ListeSallesPage';
 import PlanningSemainePage from '@/features/salles/pages/PlanningSemainePage';
 import EquipementsPage from '@/features/salles/pages/EquipementsPage';
@@ -42,6 +43,8 @@ export const router = createBrowserRouter([
         children: [
           { path: '/deplacements/vehicules', element: <ListeVehiculesPage /> },
           { path: '/deplacements/chauffeurs', element: <ListeChauffeursPage /> },
+          { path: '/deplacements/vehicules/:id/historique', element: <HistoriqueMissionsPage cible="vehicule" /> },
+          { path: '/deplacements/chauffeurs/:id/historique', element: <HistoriqueMissionsPage cible="chauffeur" /> },
         ],
       },
       { path: '/demandes/salle', element: <DemandeSallePage /> },

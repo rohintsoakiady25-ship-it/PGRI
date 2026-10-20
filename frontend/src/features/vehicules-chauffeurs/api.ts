@@ -1,4 +1,5 @@
 import { api } from '@/api/client';
+import type { TonBadge } from '@/components/common/Badge';
 
 export type EtatTechnique = 'BON' | 'A_SURVEILLER' | 'EN_REPARATION';
 export type Disponibilite = 'DISPONIBLE' | 'EN_MISSION' | 'INDISPONIBLE' | 'HORS_SERVICE';
@@ -106,8 +107,24 @@ export interface MissionFiche {
 
 export interface MissionsFiche {
   aVenir: MissionFiche[];
+  /** Les dernières missions passées seulement (5 au plus). */
   historique: MissionFiche[];
+  totalHistorique: number;
 }
+
+export const LIBELLE_STATUT_MISSION: Record<MissionFiche['statut'], string> = {
+  PREVUE: 'Prévue',
+  EN_COURS: 'En cours',
+  TERMINEE: 'Terminée',
+  ANNULEE: 'Annulée',
+};
+
+export const TON_STATUT_MISSION: Record<MissionFiche['statut'], TonBadge> = {
+  PREVUE: 'attention',
+  EN_COURS: 'succes',
+  TERMINEE: 'neutre',
+  ANNULEE: 'neutre',
+};
 
 export const vehiculesApi = {
   lister: () => api.get<Vehicule[]>('/vehicules').then((r) => r.data),
@@ -115,6 +132,10 @@ export const vehiculesApi = {
   modifier: (id: string, v: VehiculeSaisie) => api.put<Vehicule>(`/vehicules/${id}`, v).then((r) => r.data),
   supprimer: (id: string) => api.delete(`/vehicules/${id}`).then(() => undefined),
   missions: (id: string) => api.get<MissionsFiche>(`/vehicules/${id}/missions`).then((r) => r.data),
+  historique: (id: string) =>
+    api
+      .get<{ vehicule: { id: string; immatriculation: string; marqueModele: string | null }; missions: MissionFiche[] }>(`/vehicules/${id}/historique`)
+      .then((r) => r.data),
 };
 
 export const chauffeursApi = {
@@ -123,4 +144,8 @@ export const chauffeursApi = {
   modifier: (id: string, c: ChauffeurSaisie) => api.put<Chauffeur>(`/chauffeurs/${id}`, c).then((r) => r.data),
   supprimer: (id: string) => api.delete(`/chauffeurs/${id}`).then(() => undefined),
   missions: (id: string) => api.get<MissionsFiche>(`/chauffeurs/${id}/missions`).then((r) => r.data),
+  historique: (id: string) =>
+    api
+      .get<{ chauffeur: { id: string; nomComplet: string; matricule: string }; missions: MissionFiche[] }>(`/chauffeurs/${id}/historique`)
+      .then((r) => r.data),
 };

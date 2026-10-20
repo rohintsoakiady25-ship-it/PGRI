@@ -148,7 +148,7 @@ export default function ListeVehiculesPage() {
       </Modale>
       <Modale ouverte={fiche !== null} titre={fiche ? `${fiche.immatriculation}${fiche.marqueModele ? ` · ${fiche.marqueModele}` : ''}` : ''}
         onFermer={() => setFiche(null)} large>
-        {fiche && <FicheMissions cible="vehicule" charger={chargerMissions} />}
+        {fiche && <FicheMissions cible="vehicule" charger={chargerMissions} lienHistorique={`/deplacements/vehicules/${fiche.id}/historique`} />}
       </Modale>
       <Modale ouverte={aSupprimer !== null} titre="Supprimer le véhicule ?" onFermer={() => setASupprimer(null)}>
         {aSupprimer && (

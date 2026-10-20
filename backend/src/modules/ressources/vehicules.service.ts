@@ -2,7 +2,7 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Disponibilite, EtatTechnique } from '../../common/enums/etat-technique.enum';
-import { MissionResume, missionsDe, Occupation, occupations } from '../deplacements/occupations';
+import { historiqueDe, MissionResume, missionsDe, Occupation, occupations } from '../deplacements/occupations';
 import { Vehicule } from './entities/vehicule.entity';
 import { FiltreVehiculesDto, VehiculeDto } from './dto/vehicule.dto';
 
@@ -68,6 +68,13 @@ export class VehiculesService {
   async missions(id: string) {
     if (!(await this.depot.exists({ where: { id } }))) throw new NotFoundException('Véhicule introuvable.');
     return missionsDe(this.depot.manager, 'vehiculeId', id);
+  }
+
+  /** Historique complet des déplacements du véhicule. */
+  async historique(id: string) {
+    const v = await this.depot.findOne({ where: { id } });
+    if (!v) throw new NotFoundException('Véhicule introuvable.');
+    return { vehicule: { id: v.id, immatriculation: v.immatriculation, marqueModele: v.marqueModele }, missions: await historiqueDe(this.depot.manager, 'vehiculeId', id) };
   }
 
   /** Suppression définitive (l'administrateur peut aussi le mettre hors service sans le supprimer). */

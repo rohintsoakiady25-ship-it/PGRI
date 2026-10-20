@@ -24,6 +24,12 @@ export class ChauffeursController {
     return this.chauffeurs.missions(id);
   }
 
+  /** Historique complet des déplacements du chauffeur. */
+  @Get(':id/historique')
+  historique(@Param('id', ParseUUIDPipe) id: string) {
+    return this.chauffeurs.historique(id);
+  }
+
   @Post()
   creer(@Body() dto: ChauffeurDto) {
     return this.chauffeurs.creer(dto);

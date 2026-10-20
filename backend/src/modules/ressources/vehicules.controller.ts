@@ -24,6 +24,12 @@ export class VehiculesController {
     return this.vehicules.missions(id);
   }
 
+  /** Historique complet des déplacements du véhicule. */
+  @Get(':id/historique')
+  historique(@Param('id', ParseUUIDPipe) id: string) {
+    return this.vehicules.historique(id);
+  }
+
   @Post()
   creer(@Body() dto: VehiculeDto) {
     return this.vehicules.creer(dto);

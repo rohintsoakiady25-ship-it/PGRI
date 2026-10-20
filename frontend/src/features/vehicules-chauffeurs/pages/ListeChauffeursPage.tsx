@@ -107,7 +107,7 @@ export default function ListeChauffeursPage() {
         />
       </Modale>
       <Modale ouverte={fiche !== null} titre={fiche ? `${fiche.nomComplet} · matricule ${fiche.matricule}` : ''} onFermer={() => setFiche(null)} large>
-        {fiche && <FicheMissions cible="chauffeur" charger={chargerMissions} />}
+        {fiche && <FicheMissions cible="chauffeur" charger={chargerMissions} lienHistorique={`/deplacements/chauffeurs/${fiche.id}/historique`} />}
       </Modale>
       <Modale ouverte={aSupprimer !== null} titre="Supprimer le chauffeur ?" onFermer={() => setASupprimer(null)}>
         {aSupprimer && (

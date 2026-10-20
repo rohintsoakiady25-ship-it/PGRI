@@ -176,11 +176,42 @@
 }
 
 /* ---------- Graphique des demandes ---------- */
+.tdb-carte--pleine {
+  grid-column: 1 / -1;
+}
+
+.mini-graphiques {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem 2rem;
+}
+
+.mini-graphique {
+  min-width: 0;
+  margin: 0;
+}
+
+.mini-graphique__titre {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.mini-graphique__total {
+  margin-left: auto;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--ink-soft);
+}
+
 .graphique__barre {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 0.5rem 1rem;
   margin-bottom: 0.5rem;
 }
@@ -456,5 +487,9 @@
 
   .tdb-grille {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .mini-graphiques {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }

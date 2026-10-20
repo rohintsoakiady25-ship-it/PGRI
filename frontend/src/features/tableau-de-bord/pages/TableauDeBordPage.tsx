@@ -132,9 +132,9 @@ export default function TableauDeBordPage() {
             </section>
 
             <div className="tdb-grille">
-              <section className="tdb-carte" aria-labelledby="titre-demandes">
+              <section className="tdb-carte tdb-carte--pleine" aria-labelledby="titre-demandes">
                 <h2 id="titre-demandes" className="tdb-carte__titre">Demandes soumises par mois</h2>
-                <p className="tdb-carte__aide">Six derniers mois, par module</p>
+                <p className="tdb-carte__aide">Six derniers mois, un graphique par module</p>
                 <GraphiqueDemandes donnees={d.demandesParMois} />
               </section>
 
@@ -206,16 +206,6 @@ export default function TableauDeBordPage() {
                   barres={d.fournitures.parDirection.map((x) => ({
                     libelle: x.direction, valeur: x.articles, texte: pluriel(x.articles, 'article'), detail: pluriel(x.demandes, 'demande'),
                   }))}
-                />
-              </section>
-
-              <section className="tdb-carte" aria-labelledby="titre-articles">
-                <h2 id="titre-articles" className="tdb-carte__titre">Articles les plus remis</h2>
-                <p className="tdb-carte__aide">Sorties de stock de {libelleMois(d.mois)}</p>
-                <Barres
-                  couleur="var(--serie-fournitures)"
-                  vide="Aucune sortie de stock ce mois-ci."
-                  barres={d.fournitures.topArticles.map((a) => ({ libelle: a.designation, valeur: a.quantite, texte: quantiteAvecUnite(a.quantite, a.unite) }))}
                 />
                 {d.alertes.stock.length > 0 && (
                   <>

@@ -4,9 +4,7 @@
   --serie-salles: #2a78d6;
   --serie-deplacements: #eb6834;
   --serie-fournitures: #1baf7a;
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 2rem clamp(1rem, 3vw, 2.5rem) 3rem;
+  padding-bottom: 1rem;
 }
 
 :root[data-theme='dark'] .tdb {

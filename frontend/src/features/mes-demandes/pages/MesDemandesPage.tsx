@@ -165,10 +165,10 @@ export default function MesDemandesPage() {
         messageVide="Vous n’avez encore fait aucune demande."
         action={
           <span className="liste__actions-ligne">
-            <Link to="/demandes/fournitures" className="btn btn--secondary">
+            <Link to="/demandes/fournitures" className="btn btn--primary">
               + Fournitures
             </Link>
-            <Link to="/demandes/deplacement" className="btn btn--secondary">
+            <Link to="/demandes/deplacement" className="btn btn--primary">
               + Déplacement
             </Link>
             <Link to="/demandes/salle" className="btn btn--primary">

@@ -32,6 +32,15 @@ export interface DeplacementMail {
   distanceEstimeeKm: number | null;
 }
 
+/** Ce qu'il faut savoir d'une demande de fournitures pour les e-mails. */
+export interface FournitureMail {
+  reference: string;
+  demandeur: Destinataire;
+  dateBesoin: string | null;
+  observations: string | null;
+  lignes: { article: string; unite: string; quantite: number }[];
+}
+
 const FUSEAU = 'Indian/Antananarivo';
 const VERT = '#2e7d4f';
 const ROUGE = '#b3261e';
@@ -127,6 +136,81 @@ export class NotificationsService {
       lignes,
       `${d.reference} : e-mail « ${valide ? 'validée' : 'refusée'} par la logistique » au demandeur`,
     );
+  }
+
+  // ---------------------------------------------------------------- fournitures
+
+  /** Nouvelle demande de fournitures : le N+1 est invité à la valider. */
+  fournitureSoumise(d: FournitureMail, superieur: Destinataire): void {
+    this.envoyer(
+      superieur,
+      `Demande de fournitures à valider — ${d.reference}`,
+      `${echapper(d.demandeur.nomComplet)} vous soumet une demande de fournitures. Validez-la ou refusez-la dans PGRI, menu Fournitures, « Demandes à valider ».`,
+      this.lignesFourniture(d),
+      `${d.reference} : e-mail « à valider » au N+1`,
+    );
+  }
+
+  /** Décision du N+1 ou de la logistique, adressée au demandeur. */
+  decisionFourniture(d: FournitureMail, valide: boolean, parQui: string, commentaire: string | null): void {
+    const lignes = this.lignesFourniture(d);
+    if (commentaire) lignes.push([valide ? 'Commentaire' : 'Motif du refus', commentaire]);
+    this.envoyer(
+      d.demandeur,
+      `Demande de fournitures ${valide ? 'validée' : 'refusée'} — ${d.reference}`,
+      valide
+        ? `Votre demande de fournitures a été <strong style="color:${VERT}">validée</strong> par ${echapper(parQui)}. Le magasin va la préparer.`
+        : `Votre demande de fournitures a été <strong style="color:${ROUGE}">refusée</strong> par ${echapper(parQui)}.`,
+      lignes,
+      `${d.reference} : e-mail « ${valide ? 'validée' : 'refusée'} » au demandeur`,
+    );
+  }
+
+  /** Demande validée par la logistique : les magasiniers sont invités à la préparer. */
+  fournitureAPreparer(d: FournitureMail, magasiniers: Destinataire[]): void {
+    for (const m of magasiniers) {
+      this.envoyer(
+        m,
+        `Fournitures à préparer — ${d.reference}`,
+        `La demande de fournitures de ${echapper(d.demandeur.nomComplet)} a été validée par le responsable logistique. Préparez-la puis enregistrez la remise dans PGRI.`,
+        this.lignesFourniture(d),
+        `${d.reference} : e-mail « à préparer » au magasinier`,
+      );
+    }
+  }
+
+  /** Fournitures remises par le magasinier : quantités livrées, avec le motif d'une livraison partielle. */
+  fournituresRemises(
+    d: FournitureMail,
+    lignes: { article: string; unite: string; demandee: number; livree: number; observations: string | null }[],
+  ): void {
+    const partielle = lignes.some((l) => l.livree < l.demandee);
+    this.envoyer(
+      d.demandeur,
+      `Fournitures remises — ${d.reference}`,
+      partielle
+        ? 'Vos fournitures ont été remises par le magasin, <strong>en partie</strong> : voir le détail ci-dessous.'
+        : `Vos fournitures ont été <strong style="color:${VERT}">remises</strong> par le magasin.`,
+      [
+        ['Référence', d.reference],
+        ...lignes.map((l): [string, string] => [
+          l.article,
+          `${l.livree} ${l.unite} remis sur ${l.demandee} demandé${l.demandee > 1 ? 's' : ''}${l.livree < l.demandee && l.observations ? ` — ${l.observations}` : ''}`,
+        ]),
+      ],
+      `${d.reference} : e-mail « remises » au demandeur`,
+    );
+  }
+
+  private lignesFourniture(d: FournitureMail): [string, string][] {
+    const lignes: [string, string][] = [
+      ['Référence', d.reference],
+      ['Demandeur', d.demandeur.nomComplet],
+      ['Articles', d.lignes.map((l) => `${l.quantite} ${l.unite} — ${l.article}`).join(' ; ')],
+    ];
+    if (d.dateBesoin) lignes.push(['Date du besoin', jour(new Date(`${d.dateBesoin}T12:00:00+03:00`))]);
+    if (d.observations) lignes.push(['Observations', d.observations]);
+    return lignes;
   }
 
   private lignesDeplacement(d: DeplacementMail, avecDemandeur: boolean): [string, string][] {

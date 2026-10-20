@@ -203,6 +203,9 @@ CREATE TABLE IF NOT EXISTS demande (
     duree_mission_jours smallint,                                      -- mission seulement
     personnes_concernees text,
     affectation_id      uuid,                                          -- véhicule et chauffeur affectés
+    -- DemandeFourniture (section 4.1.4)
+    date_besoin         date,
+    observations        text,
     CONSTRAINT pk_demande PRIMARY KEY (id),
     CONSTRAINT uq_demande_reference UNIQUE (reference),
     CONSTRAINT fk_demande_demandeur FOREIGN KEY (demandeur_id) REFERENCES utilisateur (id),
@@ -311,6 +314,7 @@ CREATE TABLE IF NOT EXISTS mouvement_stock (
     quantite            integer                  NOT NULL,             -- signée pour un ajustement (écart)
     auteur_id           uuid                     NOT NULL,
     observation         varchar(255),                                  -- fournisseur, bon de livraison, motif
+    ligne_fourniture_id uuid,                                          -- sortie : ligne de la demande remise
     date                timestamp with time zone NOT NULL DEFAULT now(),
     CONSTRAINT pk_mouvement_stock PRIMARY KEY (id),
     CONSTRAINT fk_mouvement_stock_article FOREIGN KEY (article_id) REFERENCES article_stock (id) ON DELETE CASCADE,
@@ -320,3 +324,43 @@ CREATE TABLE IF NOT EXISTS mouvement_stock (
 );
 
 CREATE INDEX IF NOT EXISTS ix_mouvement_stock_article ON mouvement_stock (article_id);
+
+-- Articles d'une demande de fournitures : quantité demandée, puis quantité remise par le magasinier
+CREATE TABLE IF NOT EXISTS ligne_fourniture (
+    id                  uuid                     NOT NULL DEFAULT uuid_generate_v4(),
+    demande_id          uuid                     NOT NULL,
+    article_id          uuid                     NOT NULL,
+    quantite_demandee   integer                  NOT NULL,
+    quantite_livree     integer,
+    observations        varchar(255),
+    ordre               smallint                 NOT NULL DEFAULT 0,
+    CONSTRAINT pk_ligne_fourniture PRIMARY KEY (id),
+    CONSTRAINT uq_ligne_fourniture_article UNIQUE (demande_id, article_id),
+    CONSTRAINT fk_ligne_fourniture_demande FOREIGN KEY (demande_id) REFERENCES demande (id) ON DELETE CASCADE,
+    CONSTRAINT fk_ligne_fourniture_article FOREIGN KEY (article_id) REFERENCES article_stock (id),
+    CONSTRAINT ck_ligne_fourniture_demandee CHECK (quantite_demandee > 0),
+    CONSTRAINT ck_ligne_fourniture_livree CHECK (quantite_livree >= 0)
+);
+
+CREATE INDEX IF NOT EXISTS ix_ligne_fourniture_article ON ligne_fourniture (article_id);
+
+-- Lien d'une sortie de stock vers la ligne remise (ajouté ici : ligne_fourniture est créée après mouvement_stock)
+DO $$ BEGIN
+    ALTER TABLE mouvement_stock ADD CONSTRAINT fk_mouvement_stock_ligne
+        FOREIGN KEY (ligne_fourniture_id) REFERENCES ligne_fourniture (id) ON DELETE SET NULL;
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
+
+-- Bon de sortie numérique : un par demande remise, émis par le magasinier
+CREATE TABLE IF NOT EXISTS bon_de_sortie (
+    id                  uuid                     NOT NULL DEFAULT uuid_generate_v4(),
+    numero              varchar(20)              NOT NULL,             -- BS-2026-0001
+    demande_id          uuid                     NOT NULL,
+    magasinier_id       uuid                     NOT NULL,
+    date_emission       timestamp with time zone NOT NULL DEFAULT now(),
+    CONSTRAINT pk_bon_de_sortie PRIMARY KEY (id),
+    CONSTRAINT uq_bon_de_sortie_numero UNIQUE (numero),
+    CONSTRAINT uq_bon_de_sortie_demande UNIQUE (demande_id),
+    CONSTRAINT fk_bon_de_sortie_demande FOREIGN KEY (demande_id) REFERENCES demande (id) ON DELETE CASCADE,
+    CONSTRAINT fk_bon_de_sortie_magasinier FOREIGN KEY (magasinier_id) REFERENCES utilisateur (id)
+);

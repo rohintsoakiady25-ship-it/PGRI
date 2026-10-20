@@ -8,6 +8,10 @@ export function aUnRole(utilisateur: Utilisateur | null, ...roles: string[]): bo
 /** Listes des voitures et des chauffeurs (consultation et gestion) : logistique et administrateur. */
 export const peutGererReferentiels = (u: Utilisateur | null) => aUnRole(u, 'LOGISTIQUE', 'ADMIN');
 
+/** Suivi des demandes de fournitures des autres : N+1, assistante de direction, logistique, magasinier. */
+export const peutSuivreFournitures = (u: Utilisateur | null) =>
+  aUnRole(u, 'LOGISTIQUE', 'ADMIN', 'ASSISTANTE_DIRECTION', 'MAGASINIER') || Boolean(u?.estSuperieur);
+
 /** Suivi des demandes de déplacement des autres : N+1 (validation), assistante de direction (information), logistique. */
 export const peutSuivreDeplacements = (u: Utilisateur | null) =>
   aUnRole(u, 'LOGISTIQUE', 'ADMIN', 'ASSISTANTE_DIRECTION') || Boolean(u?.estSuperieur);

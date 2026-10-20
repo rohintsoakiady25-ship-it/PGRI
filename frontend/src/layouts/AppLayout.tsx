@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth, type Utilisateur } from '@/auth/AuthContext';
-import { peutGererReferentiels, peutSuivreDeplacements, peutSuivreSalles } from '@/auth/droits';
+import { peutGererReferentiels, peutSuivreDeplacements, peutSuivreFournitures, peutSuivreSalles } from '@/auth/droits';
 import logoMnp from '@/assets/logo-mnp.png';
 import BoutonTheme from '@/theme/BoutonTheme';
 import {
@@ -54,6 +54,7 @@ const menu: { titre: string | null; liens: LienMenu[] }[] = [
         icone: <IconFournitures />,
         enfants: [
           { to: '/demandes/fournitures', label: 'Demande', icone: <IconNouvelleDemande /> },
+          { to: '/fournitures/demandes', label: 'Demandes à valider', icone: <IconMesDemandes />, visible: peutSuivreFournitures },
           { to: '/fournitures/ajouter', label: 'Ajouter des fournitures', icone: <IconFournitures taille={18} />, visible: peutGererReferentiels },
           { to: '/fournitures/liste', label: 'Liste des fournitures', icone: <IconMesDemandes />, visible: peutGererReferentiels },
         ],

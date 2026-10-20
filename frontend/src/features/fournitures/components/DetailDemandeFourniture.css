@@ -1,0 +1,83 @@
+/* Articles d'une demande de fournitures, dans le détail */
+.articles {
+  width: 100%;
+  margin-bottom: 1rem;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.articles th {
+  padding: 0 0.75rem 0.5rem 0;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-align: left;
+  color: var(--ink-soft);
+  border-bottom: 1px solid var(--line);
+}
+
+.articles td {
+  padding: 0.5rem 0.75rem 0.5rem 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: top;
+}
+
+.articles__num {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.articles th.articles__num {
+  text-align: right;
+}
+
+/* Stock insuffisant pour la quantité demandée */
+.articles__manque {
+  color: var(--alert-text);
+  font-weight: 600;
+}
+
+/* Lien vers le bon de sortie, à droite de la référence */
+.detail__bon {
+  margin-left: auto;
+  min-height: 2.25rem;
+  padding: 0.4rem 0.9rem;
+  font-size: 0.875rem;
+}
+
+/* Remise par le magasinier */
+.remise__prise {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.remise__qte {
+  width: 5rem;
+  min-height: 2.25rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  font: inherit;
+  color: var(--ink);
+  text-align: right;
+}
+
+.remise__motif {
+  width: 100%;
+  min-width: 9rem;
+  min-height: 2.25rem;
+  padding: 0.3rem 0.5rem;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  font: inherit;
+  color: var(--ink);
+}
+
+.remise__motif:disabled {
+  background: var(--disabled-bg);
+}

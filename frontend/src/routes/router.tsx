@@ -1,7 +1,7 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom';
 import RouteProtegee from '@/auth/RouteProtegee';
 import RouteReservee from '@/auth/RouteReservee';
-import { peutGererReferentiels, peutSuivreDeplacements, peutSuivreSalles } from '@/auth/droits';
+import { peutGererReferentiels, peutSuivreDeplacements, peutSuivreFournitures, peutSuivreSalles } from '@/auth/droits';
 import LoginPage from '@/features/auth/pages/LoginPage';
 import AccueilPage from '@/features/accueil/pages/AccueilPage';
 import DemandeDeplacementPage from '@/features/deplacements/pages/DemandeDeplacementPage';
@@ -10,6 +10,8 @@ import DemandeSallePage from '@/features/salles/pages/DemandeSallePage';
 import DemandeFournituresPage from '@/features/fournitures/pages/DemandeFournituresPage';
 import AjouterFournituresPage from '@/features/fournitures/pages/AjouterFournituresPage';
 import ListeFournituresPage from '@/features/fournitures/pages/ListeFournituresPage';
+import SuiviDemandesFourniturePage from '@/features/fournitures/pages/SuiviDemandesFourniturePage';
+import BonDeSortiePage from '@/features/fournitures/pages/BonDeSortiePage';
 import ListeVehiculesPage from '@/features/vehicules-chauffeurs/pages/ListeVehiculesPage';
 import ListeChauffeursPage from '@/features/vehicules-chauffeurs/pages/ListeChauffeursPage';
 import HistoriqueMissionsPage from '@/features/vehicules-chauffeurs/pages/HistoriqueMissionsPage';
@@ -62,6 +64,13 @@ export const router = createBrowserRouter([
         ],
       },
       { path: '/demandes/fournitures', element: <DemandeFournituresPage /> },
+      // Bon de sortie imprimable (droits vérifiés par l'API : demandeur, N+1, logistique, magasinier…)
+      { path: '/fournitures/bons/:id', element: <BonDeSortiePage /> },
+      {
+        // Demandes de fournitures à suivre : N+1, assistante de direction, logistique, magasinier
+        element: <RouteReservee autorise={peutSuivreFournitures} />,
+        children: [{ path: '/fournitures/demandes', element: <SuiviDemandesFourniturePage /> }],
+      },
       {
         // Réception et stock des fournitures : logistique et administrateur
         element: <RouteReservee autorise={peutGererReferentiels} />,

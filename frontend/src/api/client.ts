@@ -35,5 +35,6 @@ export function messageErreur(e: unknown, parDefaut = 'Une erreur est survenue. 
   const err = e as AxiosError<{ message?: string | string[] }>;
   if (!err.response) return "Le serveur PGRI ne répond pas. Vérifiez qu'il est lancé.";
   const m = err.response.data?.message;
-  return Array.isArray(m) ? m[0] : m || parDefaut;
+  // « lignes.0.La quantité… » (erreur d'une ligne) : le chemin technique est retiré
+  return (Array.isArray(m) ? m[0] : m || parDefaut).replace(/^(\w+\.\d+\.)+/, '');
 }

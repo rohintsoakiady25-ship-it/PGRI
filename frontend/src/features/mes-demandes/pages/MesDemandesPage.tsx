@@ -10,8 +10,12 @@ import {
   demandesDeplacementApi, LIBELLE_STATUT_DEPLACEMENT, LIBELLE_TYPE, periode, TON_STATUT_DEPLACEMENT,
 } from '@/features/deplacements/api';
 import DetailDemandeDeplacement from '@/features/deplacements/components/DetailDemandeDeplacement';
+import {
+  demandesFournitureApi, LIBELLE_STATUT_FOURNITURE, resumeArticles, TON_STATUT_FOURNITURE,
+} from '@/features/fournitures/api';
+import DetailDemandeFourniture from '@/features/fournitures/components/DetailDemandeFourniture';
 
-type Module = 'SALLE' | 'DEPLACEMENT';
+type Module = 'SALLE' | 'DEPLACEMENT' | 'FOURNITURE';
 
 /** Une ligne de la liste, quel que soit le type de demande. */
 interface Ligne {
@@ -30,15 +34,25 @@ interface Ligne {
   nbCommentaires: number;
 }
 
-const LIBELLE_MODULE: Record<Module, string> = { SALLE: 'Salle de réunion', DEPLACEMENT: 'Déplacement' };
-const TERMINES = ['ANNULEE', 'LIBEREE', 'TERMINEE', 'REFUSEE'];
+const LIBELLE_MODULE: Record<Module, string> = { SALLE: 'Salle de réunion', DEPLACEMENT: 'Déplacement', FOURNITURE: 'Fournitures' };
+const TITRE_DETAIL: Record<Module, string> = {
+  SALLE: 'Réservation de salle',
+  DEPLACEMENT: 'Demande de déplacement',
+  FOURNITURE: 'Demande de fournitures',
+};
+const pourLe = (iso: string) => `pour le ${new Date(`${iso}T12:00:00`).toLocaleDateString('fr-FR', { weekday: 'short', day: 'numeric', month: 'short' })}`;
+const TERMINES = ['ANNULEE', 'LIBEREE', 'TERMINEE', 'REFUSEE', 'REMISE'];
 
 /** Mes demandes, tous modules confondus : réservations de salle et demandes de déplacement. */
 export default function MesDemandesPage() {
   const message = (useLocation().state as { message?: string } | null)?.message;
 
   const charger = useCallback(async (): Promise<Ligne[]> => {
-    const [salles, deplacements] = await Promise.all([demandesSalleApi.mes(), demandesDeplacementApi.mes()]);
+    const [salles, deplacements, fournitures] = await Promise.all([
+      demandesSalleApi.mes(),
+      demandesDeplacementApi.mes(),
+      demandesFournitureApi.mes(),
+    ]);
     return [
       ...salles.map((d) => ({
         id: d.id,
@@ -73,6 +87,20 @@ export default function MesDemandesPage() {
         terminee: TERMINES.includes(d.statut),
         nbCommentaires: 0,
       })),
+      ...fournitures.map((d) => ({
+        id: d.id,
+        module: 'FOURNITURE' as const,
+        reference: d.reference,
+        demande: `${d.lignes.length} article${d.lignes.length > 1 ? 's' : ''}`,
+        quand: d.dateBesoin ? pourLe(d.dateBesoin) : '—',
+        objet: resumeArticles(d),
+        texte: `${d.reference} ${resumeArticles(d)} ${d.observations ?? ''}`,
+        date: d.dateBesoin ?? d.soumisLe ?? '',
+        statut: LIBELLE_STATUT_FOURNITURE[d.statut],
+        ton: TON_STATUT_FOURNITURE[d.statut],
+        terminee: TERMINES.includes(d.statut),
+        nbCommentaires: 0,
+      })),
     ].sort((a, b) => b.date.localeCompare(a.date));
   }, []);
 
@@ -95,7 +123,7 @@ export default function MesDemandesPage() {
       <ListePage
         titre="Mes demandes"
         bandeau={message}
-        placeholderRecherche="Rechercher par référence, objet, lieu ou salle"
+        placeholderRecherche="Rechercher par référence, objet, lieu, salle ou article"
         recherche={recherche}
         onRecherche={setRecherche}
         filtres={[
@@ -137,6 +165,9 @@ export default function MesDemandesPage() {
         messageVide="Vous n’avez encore fait aucune demande."
         action={
           <span className="liste__actions-ligne">
+            <Link to="/demandes/fournitures" className="btn btn--secondary">
+              + Fournitures
+            </Link>
             <Link to="/demandes/deplacement" className="btn btn--secondary">
               + Déplacement
             </Link>
@@ -148,12 +179,13 @@ export default function MesDemandesPage() {
       />
       <Modale
         ouverte={ouverte !== null}
-        titre={ouverte?.module === 'DEPLACEMENT' ? 'Demande de déplacement' : 'Réservation de salle'}
+        titre={ouverte ? TITRE_DETAIL[ouverte.module] : ''}
         onFermer={() => setOuverte(null)}
         large
       >
         {ouverte?.module === 'SALLE' && <DetailDemandeSalle id={ouverte.id} onModifiee={recharger} />}
         {ouverte?.module === 'DEPLACEMENT' && <DetailDemandeDeplacement id={ouverte.id} onModifiee={recharger} />}
+        {ouverte?.module === 'FOURNITURE' && <DetailDemandeFourniture id={ouverte.id} onModifiee={recharger} />}
       </Modale>
     </>
   );

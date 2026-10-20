@@ -1,0 +1,159 @@
+/* Bon de sortie : une feuille A4 claire, à l'écran comme à l'impression */
+.bon {
+  min-height: 100vh;
+  padding: 1.5rem 1rem 3rem;
+  background: var(--cream);
+}
+
+.bon__message {
+  padding: 2rem;
+  color: var(--ink-soft);
+}
+
+.bon__outils {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.75rem;
+  max-width: 210mm;
+  margin: 0 auto 1rem;
+}
+
+.bon__page {
+  max-width: 210mm;
+  margin: 0 auto;
+  padding: 18mm 16mm;
+  background: #fff;
+  color: #1d1a16;
+  border-radius: 6px;
+  box-shadow: 0 6px 24px rgb(0 0 0 / 0.12);
+  font-size: 11pt;
+}
+
+.bon__entete {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 3px solid #e07b1a;
+}
+
+.bon__logo {
+  width: 72px;
+  height: auto;
+}
+
+.bon__titre {
+  margin: 0;
+  font-size: 20pt;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.bon__numero {
+  margin: 0.15rem 0 0;
+  font-weight: 700;
+  color: #c0620c;
+}
+
+.bon__infos {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.5rem 1.5rem;
+  margin: 1.25rem 0;
+}
+
+.bon__infos dt {
+  font-size: 9pt;
+  color: #6b5d4f;
+}
+
+.bon__infos dd {
+  margin: 0.1rem 0 0;
+  font-weight: 600;
+}
+
+.bon__table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.bon__table th,
+.bon__table td {
+  padding: 0.45rem 0.5rem;
+  border: 1px solid #cfc6b8;
+  text-align: left;
+  vertical-align: top;
+}
+
+.bon__table th {
+  background: #f6f1e8;
+  font-size: 9.5pt;
+}
+
+.bon__num {
+  text-align: right !important;
+  white-space: nowrap;
+}
+
+.bon__observations {
+  margin: 0.75rem 0 0;
+  font-size: 10pt;
+}
+
+.bon__signatures {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 2rem;
+  margin-top: 2.5rem;
+}
+
+.bon__signatures p {
+  margin: 0;
+}
+
+.bon__nom {
+  margin-top: 3.5rem !important;
+  padding-top: 0.35rem;
+  border-top: 1px solid #1d1a16;
+  font-weight: 600;
+}
+
+.bon__pied {
+  margin-top: 2.5rem;
+  font-size: 8.5pt;
+  color: #8a7c6c;
+  text-align: center;
+}
+
+@media print {
+  @page {
+    size: A4;
+    margin: 0;
+  }
+
+  .bon {
+    padding: 0;
+    background: #fff;
+  }
+
+  .bon__outils {
+    display: none;
+  }
+
+  .bon__page {
+    max-width: none;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+@media (max-width: 560px) {
+  .bon__page {
+    padding: 1.25rem 1rem;
+  }
+
+  .bon__infos,
+  .bon__signatures {
+    grid-template-columns: 1fr;
+  }
+}

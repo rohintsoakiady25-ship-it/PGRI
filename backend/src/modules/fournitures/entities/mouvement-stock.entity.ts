@@ -1,6 +1,7 @@
 import { Check, Column, CreateDateColumn, Entity, Index, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { ArticleStock } from '../../ressources/entities/article-stock.entity';
 import { Utilisateur } from '../../utilisateurs/entities/utilisateur.entity';
+import { LigneFourniture } from './ligne-fourniture.entity';
 
 export enum TypeMouvement {
   /** Réception de fournitures au magasin. */
@@ -36,6 +37,11 @@ export class MouvementStock {
   @ManyToOne(() => Utilisateur, { nullable: false })
   @JoinColumn({ name: 'auteur_id' })
   auteur!: Utilisateur;
+
+  /** Sortie : ligne de la demande remise (Figure 3, « ligneFourniture 0..1 »). */
+  @ManyToOne(() => LigneFourniture, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'ligne_fourniture_id' })
+  ligneFourniture!: LigneFourniture | null;
 
   /** Fournisseur ou bon de livraison pour une entrée, motif pour un ajustement. */
   @Column({ type: 'varchar', length: 255, nullable: true })

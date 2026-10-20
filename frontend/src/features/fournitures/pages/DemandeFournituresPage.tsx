@@ -1,6 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { messageErreur } from '@/api/client';
 import DemandePage, { Champ, Section } from '@/components/demande/DemandePage';
-import { stockApi, type ArticleCatalogue } from '../api';
+import { demandesFournitureApi, stockApi, type ArticleCatalogue } from '../api';
 import RechercheArticle from '../components/RechercheArticle';
 import './DemandeFournituresPage.css';
 
@@ -14,7 +16,7 @@ interface Ligne {
 /**
  * Demande de fournitures (rapport, section 4.1.4). Chaque ligne référence un article du catalogue
  * du magasin (ArticleStock) : l'unité vient de la fiche article et la remise met à jour le stock.
- * Le catalogue vient du magasin (articles proposés aux demandeurs) ; l'envoi de la demande sera branché avec le circuit.
+ * Après l'envoi : « Mes demandes ».
  */
 export default function DemandeFournituresPage() {
   const prochaine = useRef(1);
@@ -22,6 +24,11 @@ export default function DemandeFournituresPage() {
   const [lignes, setLignes] = useState<Ligne[]>(() => [nouvelleLigne()]);
   const [focusCle, setFocusCle] = useState<number | null>(null);
   const [catalogue, setCatalogue] = useState<ArticleCatalogue[] | null>(null);
+  const [dateBesoin, setDateBesoin] = useState('');
+  const [observations, setObservations] = useState('');
+  const [erreur, setErreur] = useState<string | null>(null);
+  const [envoi, setEnvoi] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     stockApi.catalogue().then(setCatalogue).catch(() => setCatalogue([]));
@@ -41,6 +48,38 @@ export default function DemandeFournituresPage() {
     setLignes((ls) => (ls.length > 1 ? ls.filter((x) => x.cle !== cle) : [nouvelleLigne()]));
   }
 
+  async function soumettre(e: FormEvent) {
+    e.preventDefault();
+    setErreur(null);
+    const remplies = lignes.filter((l) => l.articleId || l.quantite);
+    if (!remplies.length) return setErreur('Ajoutez au moins un article.');
+    for (const l of remplies) {
+      if (!l.articleId) return setErreur('Choisissez l’article de chaque ligne dans le catalogue.');
+      const q = Number(l.quantite);
+      if (!Number.isInteger(q) || q < 1) {
+        const nom = catalogue?.find((a) => a.id === l.articleId)?.designation ?? 'un article';
+        return setErreur(`Indiquez une quantité (nombre entier) pour « ${nom} ».`);
+      }
+    }
+    const ids = remplies.map((l) => l.articleId);
+    if (new Set(ids).size !== ids.length) return setErreur('Un même article apparaît sur plusieurs lignes : regroupez les quantités.');
+    setEnvoi(true);
+    try {
+      const d = await demandesFournitureApi.soumettre({
+        lignes: remplies.map((l) => ({ articleId: l.articleId, quantite: Number(l.quantite), observations: l.observations.trim() || null })),
+        dateBesoin: dateBesoin || null,
+        observations: observations.trim() || null,
+      });
+      const n = d.lignes.length;
+      const suite = d.statut === 'EN_ATTENTE_N1' ? 'Votre supérieur direct va l’examiner.' : 'Le responsable logistique va l’examiner.';
+      navigate('/mes-demandes', { state: { message: `Demande ${d.reference} envoyée : ${n} article${n > 1 ? 's' : ''}. ${suite}` } });
+    } catch (err) {
+      setErreur(messageErreur(err, 'La demande n’a pas pu être envoyée.'));
+    } finally {
+      setEnvoi(false);
+    }
+  }
+
   return (
     <DemandePage
       titre="Demande de fournitures"
@@ -49,6 +88,10 @@ export default function DemandeFournituresPage() {
         { titre: 'Responsable logistique', detail: 'Valide la demande avant transmission au magasin.' },
         { titre: 'Magasinier', detail: 'Remet les fournitures et édite le bon de sortie.' },
       ]}
+      onSoumettre={soumettre}
+      envoi={envoi}
+      erreur={erreur}
+      brouillon={false}
     >
       <Section titre="Articles demandés">
         <div className="champ champ--large">
@@ -128,11 +171,13 @@ export default function DemandeFournituresPage() {
 
       <Section titre="Informations complémentaires">
         <Champ id="dateBesoin" label="Date du besoin" optionnel>
-          <input id="dateBesoin" name="dateBesoin" type="date" />
+          <input id="dateBesoin" name="dateBesoin" type="date" min={new Date().toLocaleDateString('fr-CA')} value={dateBesoin}
+            onChange={(e) => setDateBesoin(e.target.value)} />
         </Champ>
         <div />
         <Champ id="observationsGenerales" label="Observations" optionnel large>
-          <textarea id="observationsGenerales" name="observationsGenerales" />
+          <textarea id="observationsGenerales" name="observationsGenerales" maxLength={2000} value={observations}
+            onChange={(e) => setObservations(e.target.value)} />
         </Champ>
       </Section>
     </DemandePage>

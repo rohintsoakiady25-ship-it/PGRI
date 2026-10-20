@@ -156,8 +156,9 @@ export class StockService {
     const a = await this.ds.getRepository(ArticleStock).findOneBy({ id });
     if (!a) throw new NotFoundException('Article introuvable.');
     const remis = await this.ds.getRepository(MouvementStock).exists({ where: { article: { id }, type: TypeMouvement.SORTIE } });
-    if (remis) {
-      throw new ConflictException('Cet article a déjà été remis à des demandeurs : décochez « Proposé aux demandeurs » plutôt que de le supprimer.');
+    const [{ n }] = await this.ds.query('SELECT count(*)::int AS n FROM ligne_fourniture WHERE article_id = $1', [id]);
+    if (remis || n > 0) {
+      throw new ConflictException('Cet article figure déjà dans des demandes : décochez « Proposé aux demandeurs » plutôt que de le supprimer.');
     }
     await this.ds.getRepository(ArticleStock).remove(a); // ses entrées et ajustements partent avec lui
   }

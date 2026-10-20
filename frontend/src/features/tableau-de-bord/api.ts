@@ -25,7 +25,12 @@ export const tableauDeBordApi = {
 const fmtMois = new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' });
 const fmtMoisCourt = new Intl.DateTimeFormat('fr-FR', { month: 'short' });
 
+const formater = (fmt: Intl.DateTimeFormat, mois: string) => {
+  const d = new Date(`${mois}-15T12:00:00`);
+  return Number.isNaN(d.getTime()) ? mois : fmt.format(d);
+};
+
 /** « 2026-10 » → « octobre 2026 » */
-export const libelleMois = (mois: string) => fmtMois.format(new Date(`${mois}-15T12:00:00`));
+export const libelleMois = (mois: string) => formater(fmtMois, mois);
 /** « 2026-10 » → « oct. » */
-export const moisCourt = (mois: string) => fmtMoisCourt.format(new Date(`${mois}-15T12:00:00`));
+export const moisCourt = (mois: string) => formater(fmtMoisCourt, mois);

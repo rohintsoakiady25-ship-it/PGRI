@@ -10,6 +10,11 @@ import Barres from '../components/Barres';
 import './TableauDeBordPage.css';
 
 const moisCourant = () => new Date().toLocaleDateString('fr-CA').slice(0, 7);
+/** Première année proposée : mise en service de la plateforme. */
+const PREMIERE_ANNEE = 2026;
+const NOMS_MOIS = Array.from({ length: 12 }, (_, i) =>
+  new Date(2026, i, 15).toLocaleDateString('fr-FR', { month: 'long' }).replace(/^./, (c) => c.toUpperCase()),
+);
 const jourCourt = (iso: string) => new Date(`${iso}T12:00:00`).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' });
 const pluriel = (n: number, mot: string) => `${n.toLocaleString('fr-FR')} ${mot}${n > 1 ? 's' : ''}`;
 const heures = (h: number) => `${h.toLocaleString('fr-FR', { maximumFractionDigits: 1 })} h`;
@@ -20,6 +25,14 @@ const heures = (h: number) => `${h.toLocaleString('fr-FR', { maximumFractionDigi
  */
 export default function TableauDeBordPage() {
   const [mois, setMois] = useState(moisCourant);
+  const [annee, numMois] = mois.split('-').map(Number);
+  const [anneeCourante, moisDeLAnnee] = moisCourant().split('-').map(Number);
+  const annees = Array.from({ length: anneeCourante - PREMIERE_ANNEE + 1 }, (_, i) => anneeCourante - i);
+  /** Change le mois ou l'année ; un mois futur est ramené au mois en cours. */
+  const choisir = (a: number, m: number) => {
+    const valeur = `${a}-${String(m).padStart(2, '0')}`;
+    setMois(valeur > moisCourant() ? moisCourant() : valeur);
+  };
   const [d, setD] = useState<TableauDeBord | null>(null);
   const [erreur, setErreur] = useState<string | null>(null);
 
@@ -40,9 +53,25 @@ export default function TableauDeBordPage() {
             <p className="tdb__periode">Indicateurs de {libelleMois(mois)}</p>
           </div>
           <div className="tdb__outils">
-            <label className="tdb__mois">
+            <label className="tdb__choix">
               <span className="sr-only">Mois</span>
-              <input type="month" value={mois} max={moisCourant()} onChange={(e) => e.target.value && setMois(e.target.value)} />
+              <select value={numMois} onChange={(e) => choisir(annee, Number(e.target.value))}>
+                {NOMS_MOIS.map((nom, i) => (
+                  <option key={nom} value={i + 1} disabled={annee === anneeCourante && i + 1 > moisDeLAnnee}>
+                    {nom}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label className="tdb__choix">
+              <span className="sr-only">Année</span>
+              <select value={annee} onChange={(e) => choisir(Number(e.target.value), numMois)}>
+                {annees.map((a) => (
+                  <option key={a} value={a}>
+                    {a}
+                  </option>
+                ))}
+              </select>
             </label>
             <button type="button" className="btn btn--primary" onClick={() => window.print()} disabled={!d}>
               Imprimer le rapport

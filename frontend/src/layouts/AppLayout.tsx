@@ -6,7 +6,7 @@ import logoMnp from '@/assets/logo-mnp.png';
 import BoutonTheme from '@/theme/BoutonTheme';
 import {
   IconAccueil, IconCalendrier, IconEquipement, IconChauffeur, IconChevron, IconDeconnexion, IconFournitures, IconMenu, IconMesDemandes, IconNouvelleDemande, IconPanneau,
-  IconSalle, IconUtilisateur, IconVehicule,
+  IconSalle, IconTableauDeBord, IconUtilisateur, IconVehicule,
 } from '@/components/common/icons';
 import './AppLayout.css';
 
@@ -16,12 +16,20 @@ interface LienMenu {
   to: string;
   label: string;
   icone: ReactNode;
+  /** Lien réservé à certains rôles (sans sous-menu). */
+  visible?: (u: Utilisateur | null) => boolean;
   /** Sous-menus : le lien devient un groupe dépliable. */
   enfants?: { to: string; label: string; icone: ReactNode; visible?: (u: Utilisateur | null) => boolean }[];
 }
 
 const menu: { titre: string | null; liens: LienMenu[] }[] = [
-  { titre: null, liens: [{ to: '/accueil', label: 'Accueil', icone: <IconAccueil /> }] },
+  {
+    titre: null,
+    liens: [
+      { to: '/accueil', label: 'Accueil', icone: <IconAccueil /> },
+      { to: '/tableau-de-bord', label: 'Tableau de bord', icone: <IconTableauDeBord />, visible: peutGererReferentiels },
+    ],
+  },
   {
     titre: 'Modules',
     liens: [
@@ -140,7 +148,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             <div key={i} className="menu__groupe">
               {groupe.titre && <p className="menu__titre">{groupe.titre}</p>}
               <ul>
-                {groupe.liens.map((l) => {
+                {groupe.liens.filter((l) => !l.visible || l.visible(utilisateur)).map((l) => {
                   const enfants = l.enfants?.filter((e) => !e.visible || e.visible(utilisateur));
                   // Un seul sous-menu visible (ex. « Demande » pour un agent) : simple lien, sans groupe dépliable
                   if (!enfants || enfants.length < 2) {

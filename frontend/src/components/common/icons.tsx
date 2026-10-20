@@ -9,6 +9,12 @@ export const IconAccueil = ({ taille = 20 }: { taille?: number }) => (
   </svg>
 );
 
+export const IconTableauDeBord = ({ taille = 20 }: { taille?: number }) => (
+  <svg {...base(taille)}>
+    <path d="M4 20V10M10 20V4M16 20v-7M21 20H3" />
+  </svg>
+);
+
 export const IconVehicule = ({ taille = 20 }: { taille?: number }) => (
   <svg {...base(taille)}>
     <path d="M5 16h14v-4.2a2 2 0 0 0-.4-1.2L16.5 7.7A2 2 0 0 0 14.9 7H8.6a2 2 0 0 0-1.7.9L5.4 10.4A2 2 0 0 0 5 11.6Z" />

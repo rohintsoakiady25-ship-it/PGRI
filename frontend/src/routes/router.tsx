@@ -21,6 +21,7 @@ import EquipementsPage from '@/features/salles/pages/EquipementsPage';
 import PlanningPublicPage from '@/features/salles/pages/PlanningPublicPage';
 import SuiviDemandesSallePage from '@/features/salles/pages/SuiviDemandesSallePage';
 import MesDemandesPage from '@/features/mes-demandes/pages/MesDemandesPage';
+import TableauDeBordPage from '@/features/tableau-de-bord/pages/TableauDeBordPage';
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -33,6 +34,11 @@ export const router = createBrowserRouter([
       { path: '/', element: <Navigate to="/accueil" replace /> },
       { path: '/accueil', element: <AccueilPage /> },
       { path: '/mes-demandes', element: <MesDemandesPage /> },
+      {
+        // Tableau de bord et rapport mensuel : logistique et administrateur
+        element: <RouteReservee autorise={peutGererReferentiels} />,
+        children: [{ path: '/tableau-de-bord', element: <TableauDeBordPage /> }],
+      },
       { path: '/demandes/deplacement', element: <DemandeDeplacementPage /> },
       {
         // Demandes de déplacement à suivre : N+1 (validation), assistante de direction, logistique

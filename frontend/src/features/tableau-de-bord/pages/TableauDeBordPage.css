@@ -1,0 +1,462 @@
+/* Tableau de bord. Couleurs des modules : palette catégorielle validée (clair et sombre),
+   salles = bleu, déplacements = orange, fournitures = aqua ; la même couleur suit le module partout. */
+.tdb {
+  --serie-salles: #2a78d6;
+  --serie-deplacements: #eb6834;
+  --serie-fournitures: #1baf7a;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem clamp(1rem, 3vw, 2.5rem) 3rem;
+}
+
+:root[data-theme='dark'] .tdb {
+  --serie-salles: #3987e5;
+  --serie-deplacements: #d95926;
+  --serie-fournitures: #199e70;
+}
+
+.tdb__entete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+}
+
+.tdb__titre {
+  margin: 0;
+  font-size: clamp(1.75rem, 3.5vw, 2.125rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.tdb__periode {
+  margin: 0.25rem 0 0;
+  color: var(--ink-soft);
+}
+
+.tdb__outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.tdb__mois input {
+  min-height: 2.75rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface);
+  font: inherit;
+  color: var(--ink);
+}
+
+.tdb-erreur {
+  color: var(--alert-text);
+}
+
+.tdb-vide {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.9375rem;
+}
+
+/* ---------- Chiffres clés ---------- */
+.tuiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.tuile {
+  display: grid;
+  gap: 0.25rem;
+  padding: 1.1rem 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.tuile--accent {
+  border-color: color-mix(in srgb, var(--mnp-orange) 45%, var(--line));
+  background: color-mix(in srgb, var(--mnp-orange) 7%, var(--surface));
+}
+
+.tuile__libelle {
+  font-size: 0.875rem;
+  color: var(--ink-soft);
+}
+
+.tuile__valeur {
+  font-size: 2.25rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+
+.tuile__sur {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.tuile__detail {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+/* ---------- Cartes ---------- */
+.tdb-grille {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.tdb-carte {
+  min-width: 0;
+  padding: 1.25rem;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+}
+
+.tdb-carte--large {
+  margin-bottom: 1rem;
+}
+
+.tdb-carte__titre {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 700;
+}
+
+.tdb-carte__aide {
+  margin: 0.2rem 0 1rem;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.tdb-carte__sous-titre {
+  margin: 1.25rem 0 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 700;
+}
+
+/* À traiter */
+.a-traiter {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+.a-traiter__lien {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  text-decoration: none;
+}
+
+.a-traiter__lien:hover {
+  background: var(--surface-hover);
+}
+
+.a-traiter__nombre {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--ink-soft);
+}
+
+.a-traiter__lien--actif .a-traiter__nombre {
+  color: var(--mnp-orange-deep);
+}
+
+/* ---------- Graphique des demandes ---------- */
+.graphique__barre {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.legende {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.legende li {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legende__pastille {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  flex-shrink: 0;
+}
+
+.graphique__bascule {
+  padding: 0.25rem 0.5rem;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-size: 0.8125rem;
+  color: var(--accent-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  cursor: pointer;
+}
+
+.graphique__zone {
+  position: relative;
+}
+
+.graphique__svg {
+  display: block;
+  max-width: 100%;
+}
+
+.graphique__grille {
+  stroke: var(--line);
+  stroke-width: 1;
+}
+
+.graphique__axe {
+  fill: var(--ink-soft);
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
+
+.graphique__valeur {
+  fill: var(--ink);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.graphique__cible {
+  fill: transparent;
+}
+
+.graphique__svg g:focus {
+  outline: none;
+}
+
+.graphique__svg g:focus-visible .graphique__cible {
+  stroke: var(--mnp-yellow);
+  stroke-width: 2;
+}
+
+.infobulle {
+  position: absolute;
+  top: 0;
+  transform: translateX(-50%);
+  display: grid;
+  gap: 0.2rem;
+  min-width: 11rem;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--surface-raised, var(--surface));
+  box-shadow: 0 8px 20px rgb(var(--shadow-rgb) / 0.18);
+  font-size: 0.8125rem;
+  pointer-events: none;
+}
+
+.infobulle__ligne {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--ink-soft);
+}
+
+.infobulle__valeur {
+  margin-left: auto;
+  font-weight: 600;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- Tableaux ---------- */
+.tdb-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.tdb-table th,
+.tdb-table td {
+  padding: 0.45rem 0.5rem 0.45rem 0;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+}
+
+.tdb-table th {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--ink-soft);
+}
+
+.tdb-table__num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---------- Barres horizontales ---------- */
+.barres {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.barres__ligne {
+  display: grid;
+  grid-template-columns: minmax(6rem, 34%) 1fr;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.875rem;
+}
+
+.barres__libelle {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.barres__piste {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.barres__barre {
+  flex: 0 1 auto;
+  height: 14px;
+  min-width: 3px;
+  max-width: calc(100% - 6rem);
+  border-radius: 0 4px 4px 0;
+}
+
+.barres__valeur {
+  flex-shrink: 0;
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* ---------- Jauges d'occupation des salles ---------- */
+.jauges {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.jauge {
+  display: grid;
+  gap: 0.3rem;
+}
+
+.jauge__entete {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.9375rem;
+}
+
+.jauge__valeur {
+  font-weight: 700;
+}
+
+.jauge__piste {
+  height: 10px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--serie-salles) 20%, var(--surface));
+}
+
+.jauge__remplissage {
+  display: block;
+  height: 100%;
+  border-radius: 999px;
+  background: var(--serie-salles);
+}
+
+.jauge__detail {
+  font-size: 0.8125rem;
+  color: var(--ink-soft);
+}
+
+.stock-bas {
+  display: grid;
+  gap: 0.4rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+}
+
+.stock-bas li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tdb__pied {
+  margin: 1.5rem 0 0;
+  font-size: 0.75rem;
+  color: var(--ink-soft);
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .tdb-grille {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ---------- Rapport mensuel imprimé ---------- */
+@media print {
+  .menu,
+  .barre,
+  .shell__voile,
+  .tdb__outils,
+  .graphique__bascule {
+    display: none !important;
+  }
+
+  .tdb {
+    max-width: none;
+    padding: 0;
+  }
+
+  .tdb-carte,
+  .tuile {
+    break-inside: avoid;
+  }
+
+  .tdb-grille {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

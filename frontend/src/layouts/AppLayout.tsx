@@ -101,13 +101,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   // Sur mobile, le menu se referme après navigation
   useEffect(() => setOuvertMobile(false), [pathname]);
 
+  /** Un seul module déplié à la fois : en ouvrir un referme les autres. */
   function basculerGroupe(label: string) {
-    setGroupesOuverts((ouverts) => {
-      const suivant = new Set(ouverts);
-      if (suivant.has(label)) suivant.delete(label);
-      else suivant.add(label);
-      return suivant;
-    });
+    setGroupesOuverts((ouverts) => (ouverts.has(label) ? new Set() : new Set([label])));
   }
 
   function basculer() {

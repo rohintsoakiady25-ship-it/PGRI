@@ -471,7 +471,8 @@
   .barre,
   .shell__voile,
   .tdb__outils,
-  .graphique__bascule {
+  .graphique__bascule,
+  .infobulle {
     display: none !important;
   }
 
@@ -481,12 +482,33 @@
   }
 
   .tdb-carte,
-  .tuile {
+  .tuile,
+  .tuiles {
     break-inside: avoid;
   }
 
+  /* Une grille CSS se coupe entre deux pages au milieu des cartes : à l'impression, les cartes sont des
+     blocs en ligne (insécables) posés deux par deux, et passent entières à la page suivante si besoin. */
   .tdb-grille {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: block;
+    font-size: 0;
+  }
+
+  .tdb-grille > .tdb-carte {
+    display: inline-block;
+    width: calc(50% - 0.5rem);
+    margin: 0 0 1rem;
+    vertical-align: top;
+    font-size: 1rem;
+  }
+
+  .tdb-grille > .tdb-carte:nth-child(even) {
+    margin-right: 1rem;
+  }
+
+  .tdb-grille > .tdb-carte--pleine {
+    width: 100%;
+    margin-right: 0;
   }
 
   .mini-graphiques {

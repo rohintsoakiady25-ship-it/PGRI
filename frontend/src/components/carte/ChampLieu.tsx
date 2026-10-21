@@ -1,5 +1,6 @@
-import { useEffect, useId, useRef, useState } from 'react';
+import { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { nommerPoint, rechercherLieux, type Lieu } from './lieux';
+import { filtrerAires, lieuDeAire, type AireProtegee } from './referentiel';
 import './ChampLieu.css';
 
 interface ChampLieuProps {
@@ -10,9 +11,11 @@ interface ChampLieuProps {
   placeholder?: string;
   /** Propose « Ma position actuelle » en tête de liste (géolocalisation du navigateur). */
   positionActuelle?: boolean;
+  /** Aires protégées du référentiel MNP, proposées en premier quand le texte y correspond. */
+  aires?: AireProtegee[];
 }
 
-type Option = { type: 'position' } | { type: 'lieu'; lieu: Lieu };
+type Option = { type: 'position' } | { type: 'aire'; aire: AireProtegee } | { type: 'lieu'; lieu: Lieu };
 
 /** Position GPS du navigateur ; message lisible en cas d'échec. */
 function localiser(): Promise<GeolocationPosition> {
@@ -36,7 +39,7 @@ function localiser(): Promise<GeolocationPosition> {
 }
 
 /** Champ de saisie avec suggestions de lieux (combobox accessible au clavier). */
-export default function ChampLieu({ id, name, valeur, onChange, placeholder, positionActuelle = false }: ChampLieuProps) {
+export default function ChampLieu({ id, name, valeur, onChange, placeholder, positionActuelle = false, aires = [] }: ChampLieuProps) {
   const [texte, setTexte] = useState(valeur?.nom ?? '');
   const [suggestions, setSuggestions] = useState<Lieu[]>([]);
   const [ouvert, setOuvert] = useState(false);
@@ -45,11 +48,20 @@ export default function ChampLieu({ id, name, valeur, onChange, placeholder, pos
   const [erreurPosition, setErreurPosition] = useState<string | null>(null);
   const saisieUtilisateur = useRef(false);
   const listeId = useId();
+  // Aires protégées : filtrées sur place, sans attendre la recherche de lieux
+  const airesTrouvees = useMemo(() => (valeur ? [] : filtrerAires(aires, texte)), [aires, texte, valeur]);
 
   const options: Option[] = [
     ...(positionActuelle ? [{ type: 'position' } as const] : []),
+    ...airesTrouvees.map((aire) => ({ type: 'aire', aire }) as const),
     ...suggestions.map((lieu) => ({ type: 'lieu', lieu }) as const),
   ];
+
+  useEffect(() => {
+    if (!saisieUtilisateur.current || !airesTrouvees.length) return;
+    setOuvert(true);
+    setActif(positionActuelle ? 1 : 0);
+  }, [airesTrouvees, positionActuelle]);
 
   // Un lieu choisi ailleurs (clic sur la carte) remplace le texte du champ
   useEffect(() => {
@@ -73,8 +85,9 @@ export default function ChampLieu({ id, name, valeur, onChange, placeholder, pos
       try {
         const lieux = await rechercherLieux(requete, annulation.signal);
         setSuggestions(lieux);
-        // Le premier lieu trouvé est présélectionné (la position actuelle reste au-dessus)
-        setActif(lieux.length ? (positionActuelle ? 1 : 0) : -1);
+        // Le premier résultat est présélectionné (la position actuelle reste au-dessus) ;
+        // sans lieu trouvé, la présélection d'une aire protégée est conservée
+        setActif((i) => (lieux.length ? (positionActuelle ? 1 : 0) : i));
         setEtat(lieux.length ? 'repos' : 'vide');
         setOuvert(true);
       } catch (e) {
@@ -114,6 +127,7 @@ export default function ChampLieu({ id, name, valeur, onChange, placeholder, pos
 
   function valider(option: Option) {
     if (option.type === 'position') void choisirPosition();
+    else if (option.type === 'aire') choisir(lieuDeAire(option.aire));
     else choisir(option.lieu);
   }
 
@@ -180,11 +194,11 @@ export default function ChampLieu({ id, name, valeur, onChange, placeholder, pos
         <ul id={listeId} role="listbox" className="champ-lieu__liste">
           {options.map((o, i) => (
             <li
-              key={o.type === 'position' ? 'position' : `${o.lieu.lon},${o.lieu.lat}`}
+              key={o.type === 'position' ? 'position' : o.type === 'aire' ? `aire-${o.aire.id}` : `${o.lieu.lon},${o.lieu.lat}`}
               id={`${listeId}-${i}`}
               role="option"
               aria-selected={i === actif}
-              className={`champ-lieu__option${o.type === 'position' ? ' champ-lieu__option--position' : ''}`}
+              className={`champ-lieu__option${o.type === 'position' ? ' champ-lieu__option--position' : ''}${o.type === 'aire' ? ' champ-lieu__option--aire' : ''}`}
               onMouseDown={(e) => e.preventDefault()}
               onClick={() => valider(o)}
               onMouseEnter={() => setActif(i)}
@@ -199,6 +213,11 @@ export default function ChampLieu({ id, name, valeur, onChange, placeholder, pos
                   </svg>
                   Ma position actuelle
                 </span>
+              ) : o.type === 'aire' ? (
+                <>
+                  <span className="champ-lieu__nom">{o.aire.nom}</span>
+                  <span className="champ-lieu__detail">{lieuDeAire(o.aire).detail}</span>
+                </>
               ) : (
                 <>
                   <span className="champ-lieu__nom">{o.lieu.nom}</span>
@@ -207,7 +226,7 @@ export default function ChampLieu({ id, name, valeur, onChange, placeholder, pos
               )}
             </li>
           ))}
-          {!suggestions.length && message && <li className="champ-lieu__message">{message}</li>}
+          {!suggestions.length && !airesTrouvees.length && message && <li className="champ-lieu__message">{message}</li>}
         </ul>
       )}
       {erreurPosition && (

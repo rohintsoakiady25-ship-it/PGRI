@@ -1,10 +1,12 @@
 import { Module } from '@nestjs/common';
+import { CartographieController } from './cartographie.controller';
+import { ReferentielMnpService } from './referentiel-mnp.service';
+import { UgsClientService } from './ugs-client.service';
 
-/** Recherche de lieu et estimation de distance pour les déplacements. */
+/** Référentiel géographique de MNP (aires protégées, unités de gestion) via l'API mnp-ugs-api de la DSII. */
 @Module({
-  imports: [],
-  controllers: [],
-  providers: [],
-  exports: [],
+  controllers: [CartographieController],
+  providers: [UgsClientService, ReferentielMnpService],
+  exports: [ReferentielMnpService],
 })
 export class CartographieModule {}

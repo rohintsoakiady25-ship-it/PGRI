@@ -76,6 +76,11 @@
   border-radius: 6px 6px 0 0;
 }
 
+/* Aire protégée du référentiel MNP : liseré vert, comme son contour sur la carte */
+.champ-lieu__option--aire {
+  box-shadow: inset 3px 0 0 #2f7d4f;
+}
+
 .champ-lieu__position {
   display: inline-flex;
   white-space: nowrap;

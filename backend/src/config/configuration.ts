@@ -47,4 +47,12 @@ export default () => ({
     /** Boîte d'envoi (ex. webmaster@mnparks.mg). */
     expediteur: process.env.MAIL_SENDER_ADDRESS ?? '',
   },
+  /** API mnp-ugs-api de la DSII (aires protégées, unités de gestion) ; désactivée si un réglage manque. */
+  ugs: {
+    baseUrl: (process.env.MNP_UGS_BASE_URL ?? '').replace(/\/+$/, ''),
+    clientId: process.env.MNP_UGS_CLIENT_ID ?? '',
+    clientSecret: process.env.MNP_UGS_CLIENT_SECRET ?? '',
+    /** Scopes demandés, séparés par des espaces (vide : tous ceux accordés à PGRI par la DSII). */
+    scope: process.env.MNP_UGS_SCOPE ?? 'protected-areas:read management-units:read',
+  },
 });

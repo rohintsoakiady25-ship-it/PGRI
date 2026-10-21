@@ -10,10 +10,12 @@ import OSM from 'ol/source/OSM';
 import VectorSource from 'ol/source/Vector';
 import { Circle, Fill, Stroke, Style, Text } from 'ol/style';
 import { fromLonLat, toLonLat, transformExtent } from 'ol/proj';
-import { boundingExtent } from 'ol/extent';
+import { boundingExtent, extend, isEmpty } from 'ol/extent';
+import GeoJSON from 'ol/format/GeoJSON';
 import { defaults as defaultControls, ScaleLine } from 'ol/control';
 import type { Lieu } from './lieux';
 import type { Itineraire } from './itineraire';
+import type { ContourAire } from './referentiel';
 import 'ol/ol.css';
 import './CarteMadagascar.css';
 
@@ -56,6 +58,14 @@ const styleItineraireAutre = [
   new Style({ stroke: new Stroke({ color: '#fff', width: 7 }), zIndex: 1 }),
   new Style({ stroke: new Stroke({ color: '#8f7a68', width: 4 }), zIndex: 2 }),
 ];
+// Contour d'une aire protégée (référentiel MNP)
+const styleContour = new Style({
+  stroke: new Stroke({ color: '#2f7d4f', width: 2 }),
+  fill: new Fill({ color: 'rgba(47, 125, 79, 0.14)' }),
+  zIndex: 0,
+});
+const lecteurGeoJSON = new GeoJSON({ dataProjection: 'EPSG:4326', featureProjection: 'EPSG:3857' });
+
 const styleVolOiseau = new Style({ stroke: new Stroke({ color: ORANGE, width: 2, lineDash: [6, 6] }) });
 
 interface CarteMadagascarProps {
@@ -64,6 +74,8 @@ interface CarteMadagascarProps {
   destination?: Lieu | null;
   itineraires?: Itineraire[];
   itineraireChoisi?: number;
+  /** Contours des aires protégées à montrer (celle de la destination). */
+  contours?: ContourAire[];
   /** Clic sur la carte (hors itinéraire) : coordonnées du point cliqué. */
   onSelection?: (lon: number, lat: number) => void;
   /** Clic sur un itinéraire proposé. */
@@ -72,7 +84,7 @@ interface CarteMadagascarProps {
 
 /** Carte OpenLayers de Madagascar : départ, destination et itinéraires routiers. */
 export default function CarteMadagascar({
-  hauteur = 320, depart, destination, itineraires = [], itineraireChoisi = 0, onSelection, onChoixItineraire,
+  hauteur = 320, depart, destination, itineraires = [], itineraireChoisi = 0, contours = [], onSelection, onChoixItineraire,
 }: CarteMadagascarProps) {
   const conteneur = useRef<HTMLDivElement>(null);
   const carteRef = useRef<Map | null>(null);
@@ -120,6 +132,20 @@ export default function CarteMadagascar({
     const source = sourceRef.current;
     source.clear();
     const aCadrer: number[][] = [];
+    let emprise: number[] | null = null;
+
+    for (const contour of contours) {
+      if (!contour.geometry) continue;
+      try {
+        const f = lecteurGeoJSON.readFeature(contour) as Feature;
+        f.setStyle(styleContour);
+        source.addFeature(f);
+        const e = f.getGeometry()?.getExtent();
+        if (e) emprise = emprise ? extend(emprise, e) : [...e];
+      } catch {
+        // Géométrie illisible : la carte reste utilisable sans ce contour
+      }
+    }
 
     itineraires.forEach((it, i) => {
       const coords = it.trace.map((c) => fromLonLat(c));
@@ -149,14 +175,17 @@ export default function CarteMadagascar({
     }
 
     const carte = carteRef.current;
-    if (!carte || !aCadrer.length) return;
+    if (!carte || (!aCadrer.length && !emprise)) return;
     const vue = carte.getView();
-    if (aCadrer.length === 1) {
+    if (emprise && !isEmpty(emprise)) {
+      const tout = aCadrer.length ? extend(boundingExtent(aCadrer), emprise) : emprise;
+      vue.fit(tout, { padding: [56, 56, 56, 56], maxZoom: 13, duration: 400 });
+    } else if (aCadrer.length === 1) {
       vue.animate({ center: aCadrer[0], zoom: Math.max(vue.getZoom() ?? 6, 9), duration: 400 });
     } else {
       vue.fit(boundingExtent(aCadrer), { padding: [56, 56, 56, 56], maxZoom: 13, duration: 400 });
     }
-  }, [depart, destination, itineraires, itineraireChoisi]);
+  }, [depart, destination, itineraires, itineraireChoisi, contours]);
 
   return (
     <div

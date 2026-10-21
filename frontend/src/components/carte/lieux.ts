@@ -9,6 +9,8 @@ export interface Lieu {
   detail: string;
   lon: number;
   lat: number;
+  /** Aire protégée du référentiel MNP, si le lieu en est une. */
+  aireId?: string;
 }
 
 const NOMINATIM = 'https://nominatim.openstreetmap.org';

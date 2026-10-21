@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { messageErreur } from '@/api/client';
 import DemandePage, { Champ, Section } from '@/components/demande/DemandePage';
@@ -6,6 +6,7 @@ import CarteMadagascar from '@/components/carte/CarteMadagascar';
 import ChampLieu from '@/components/carte/ChampLieu';
 import { nommerPoint, type Lieu } from '@/components/carte/lieux';
 import { calculerItineraires, formaterDuree, type Itineraire } from '@/components/carte/itineraire';
+import { contourAire, lieuDeAire, useReferentielMnp, type AireProtegee, type ContourAire } from '@/components/carte/referentiel';
 import { demandesDeplacementApi, periode, type TypeDeplacement } from '../api';
 import './DemandeDeplacementPage.css';
 
@@ -41,6 +42,29 @@ export default function DemandeDeplacementPage() {
   const [personnes, setPersonnes] = useState('');
   const [erreur, setErreur] = useState<string | null>(null);
   const [envoi, setEnvoi] = useState(false);
+  const referentiel = useReferentielMnp();
+  const [contours, setContours] = useState<ContourAire[]>([]);
+
+  // Aires protégées regroupées par unité de gestion (liste déroulante)
+  const groupes = useMemo(() => {
+    const parUnite = new Map<string, { id: string; nom: string; aires: AireProtegee[] }>();
+    for (const a of referentiel.aires) {
+      const cle = a.uniteGestion?.id ?? '';
+      const g = parUnite.get(cle) ?? { id: cle, nom: a.uniteGestion?.nom ?? 'Sans unité de gestion', aires: [] };
+      g.aires.push(a);
+      parUnite.set(cle, g);
+    }
+    return [...parUnite.values()].sort((g1, g2) => (g1.id === '' ? 1 : g2.id === '' ? -1 : g1.nom.localeCompare(g2.nom, 'fr')));
+  }, [referentiel.aires]);
+
+  // Destination dans une aire protégée : son contour sur la carte
+  useEffect(() => {
+    setContours([]);
+    if (!destination?.aireId) return;
+    const annulation = new AbortController();
+    contourAire(destination.aireId, annulation.signal).then((c) => setContours([c])).catch(() => undefined);
+    return () => annulation.abort();
+  }, [destination?.aireId]);
 
   // Mission : la durée suit les dates tant que le demandeur ne l'a pas modifiée lui-même
   useEffect(() => {
@@ -163,8 +187,30 @@ export default function DemandeDeplacementPage() {
           <ChampLieu id="lieuDepart" name="lieuDepart" valeur={depart} onChange={setDepart} placeholder="Rechercher un lieu" positionActuelle />
         </Champ>
         <Champ id="destination" label="Destination">
-          <ChampLieu id="destination" name="destination" valeur={destination} onChange={setDestination} placeholder="Rechercher un lieu" positionActuelle />
+          <ChampLieu id="destination" name="destination" valeur={destination} onChange={setDestination}
+            placeholder={referentiel.disponible ? 'Rechercher un lieu ou une aire protégée' : 'Rechercher un lieu'} positionActuelle
+            aires={referentiel.aires} />
         </Champ>
+        {referentiel.disponible && groupes.length > 0 && (
+          <Champ id="aireProtegee" label="Ou choisir une aire protégée" optionnel large>
+            <select id="aireProtegee" value={destination?.aireId ?? ''}
+              onChange={(e) => {
+                const aire = referentiel.aires.find((a) => a.id === e.target.value);
+                setDestination(aire ? lieuDeAire(aire) : null);
+              }}>
+              <option value="">Aires protégées par unité de gestion…</option>
+              {groupes.map((g) => (
+                <optgroup key={g.id || 'sans'} label={g.nom}>
+                  {g.aires.map((a) => (
+                    <option key={a.id} value={a.id}>
+                      {a.nom}{a.sigle ? ` (${a.sigle})` : ''}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
+          </Champ>
+        )}
 
         <div className="champ champ--large">
           <div className="carte-barre">
@@ -186,6 +232,7 @@ export default function DemandeDeplacementPage() {
             destination={destination}
             itineraires={itineraires}
             itineraireChoisi={choix}
+            contours={contours}
             onSelection={placerSurCarte}
             onChoixItineraire={setChoix}
           />

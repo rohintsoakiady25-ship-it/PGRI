@@ -466,7 +466,22 @@
 }
 
 /* ---------- Rapport mensuel imprimé ---------- */
+/* Page nommée, propre au rapport (le bon de sortie a la sienne). Marge nulle : le navigateur n'a alors plus
+   de place pour ses en-têtes et pieds de page (adresse localhost, date, titre) ; l'espace autour du contenu
+   est un rembourrage du rapport, répété sur chaque page. */
+@page rapport {
+  size: A4;
+  margin: 0;
+}
+
 @media print {
+  .tdb {
+    page: rapport;
+    padding: 12mm !important;
+    -webkit-box-decoration-break: clone;
+    box-decoration-break: clone;
+  }
+
   .menu,
   .barre,
   .shell__voile,
@@ -478,7 +493,6 @@
 
   .tdb {
     max-width: none;
-    padding: 0;
   }
 
   .tdb-carte,

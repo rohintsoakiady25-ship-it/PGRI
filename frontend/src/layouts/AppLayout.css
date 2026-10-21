@@ -541,3 +541,24 @@
     transition: none;
   }
 }
+
+/* ---------- Impression ---------- */
+/* Pages imprimées (rapport, bon de sortie) : ni menu ni barre, et une mise en page en blocs simples,
+   car les navigateurs coupent mal le contenu d'une grille ou d'une colonne flexible entre deux pages. */
+@media print {
+  .menu,
+  .barre,
+  .shell__voile {
+    display: none !important;
+  }
+
+  .shell,
+  .shell__colonne {
+    display: block;
+    min-height: 0;
+  }
+
+  .shell__main {
+    padding: 0;
+  }
+}
